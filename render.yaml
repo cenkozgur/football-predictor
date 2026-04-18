@@ -10,3 +10,5 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: DATABASE_URL
+        value: "sqlite:///./football.db"
