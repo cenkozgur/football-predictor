@@ -12,6 +12,8 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: "sqlite:///./football.db"
     steps:
       - uses: actions/checkout@v4
 
