@@ -19,6 +19,8 @@ build/
 
 # Databases + models
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
 data/
 artifacts/
