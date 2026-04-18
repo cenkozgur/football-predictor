@@ -78,4 +78,18 @@ def accuracy(
 
     summary["matches_evaluated"] = len(items)
     summary["details"] = details[:200]
+
+    # Spec-compatible aliases so UIs using the documented field names work:
+    summary["markets"] = summary.get("by_market", {})
+    compat_cal = []
+    for c in summary.get("calibration", []):
+        compat_cal.append({
+            **c,
+            "bin": c.get("range"),
+            "expected": c.get("avg_prob"),
+            "actual": c.get("hit_rate"),
+            "n": c.get("picks"),
+        })
+    if compat_cal:
+        summary["calibration"] = compat_cal
     return summary

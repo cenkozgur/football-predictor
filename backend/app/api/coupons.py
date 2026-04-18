@@ -98,4 +98,10 @@ def list_coupon_suggestions(
         "matches_considered": len(match_predictions),
         "qualifying_picks": len(result["all_picks"]),
     }
+    # Unified array so UIs can render a single list (primary first, then alts).
+    coupons_list = []
+    if result.get("primary"):
+        coupons_list.append(result["primary"])
+    coupons_list.extend(result.get("alternatives", []))
+    result["coupons"] = coupons_list
     return result
