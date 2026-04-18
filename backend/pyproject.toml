@@ -7,7 +7,7 @@ dependencies = [
     # Web
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
-    "pydantic>=2.9",
+    "pydantic[email]>=2.9",
     "pydantic-settings>=2.6",
     # Auth
     "pyjwt>=2.9",
