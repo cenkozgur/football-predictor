@@ -49,6 +49,19 @@ def _debug_db() -> dict:
             info["scheduled_future"] = conn.execute(
                 text("SELECT COUNT(*) FROM matches WHERE status='scheduled' AND kickoff > datetime('now')")
             ).scalar()
+            info["scheduled_total"] = conn.execute(
+                text("SELECT COUNT(*) FROM matches WHERE status='scheduled'")
+            ).scalar()
+            info["status_breakdown"] = dict(
+                conn.execute(text("SELECT status, COUNT(*) FROM matches GROUP BY status")).all()
+            )
+            info["kickoff_range"] = list(
+                conn.execute(text("SELECT MIN(kickoff), MAX(kickoff) FROM matches")).first() or []
+            )
+            info["scheduled_kickoff_range"] = list(
+                conn.execute(text("SELECT MIN(kickoff), MAX(kickoff) FROM matches WHERE status='scheduled'")).first() or []
+            )
+            info["db_now"] = conn.execute(text("SELECT datetime('now')")).scalar()
     except Exception as e:
         info["query_error"] = str(e)
     info["cwd"] = os.getcwd()
