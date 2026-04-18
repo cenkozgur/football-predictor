@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Tahmin — Kuponlar</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #22c55e;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 16px 32px;
+    }
+    h1 { font-size: 20px; margin: 0; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .legs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .leg-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      border: none;
+      border-radius: 12px;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .leg-btn.active { background: var(--accent); color: #000; }
+    input[type=range] { width: 100%; accent-color: var(--accent); margin-top: 8px; }
+    .prob-val { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .markets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .market-chip {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .market-chip.active {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+    .coupon {
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+    .coupon.primary {
+      background: rgba(34, 197, 94, 0.05);
+      border: 2px solid rgba(34, 197, 94, 0.4);
+    }
+    .coupon-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+    }
+    .coupon.primary .badge { background: var(--accent); color: #000; }
+    .win-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+    .win-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+    .coupon.primary .win-val { color: var(--accent); }
+    .leg {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      margin-top: 8px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .leg:hover { background: rgba(255, 255, 255, 0.08); }
+    .leg-wrap { margin-top: 8px; }
+    .stats {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .stats .grp { margin-top: 10px; }
+    .stats .grp:first-child { margin-top: 0; }
+    .stats .grp-title {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .stat-row .name { flex: 0 0 90px; color: var(--muted); font-size: 11px; }
+    .stat-row .bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .stat-row .bar { height: 100%; background: var(--accent); border-radius: 3px; }
+    .stat-row .pct {
+      flex: 0 0 40px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .lambdas {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .lambdas strong { color: var(--text); font-variant-numeric: tabular-nums; }
+    .leg-teams { font-size: 12px; color: var(--muted); }
+    .leg-sel { font-size: 14px; font-weight: 600; margin-top: 2px; }
+    .leg-sel .sel { color: var(--accent); }
+    .leg-sel .mk { color: var(--muted); font-weight: 400; }
+    .leg-right { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .leg-prob { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .leg-time { font-size: 9px; color: var(--muted); }
+    .section-h {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 20px 4px 8px;
+    }
+    .banko-list {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .banko-row { display: flex; align-items: center; padding: 10px 14px; }
+    .banko-row + .banko-row { border-top: 1px solid var(--border); }
+    .banko-sel { font-size: 14px; color: var(--accent); font-weight: 500; margin-top: 2px; }
+    .msg {
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .msg.err { background: rgba(127, 29, 29, 0.2); border: 1px solid rgba(127, 29, 29, 0.3); color: #fca5a5; }
+    .msg.warn { background: rgba(120, 53, 15, 0.2); border: 1px solid rgba(120, 53, 15, 0.3); color: #fbbf24; }
+    .msg.info { background: var(--card); border: 1px solid var(--border); color: var(--muted); text-align: center; }
+    .disclaimer {
+      background: rgba(24, 24, 27, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .disclaimer .warn { color: rgba(251, 191, 36, 0.8); }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin: 12px 0 16px;
+    }
+    .tab {
+      flex: 1;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tab.active { background: var(--accent); color: #000; }
+    .hidden { display: none !important; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .kpi {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-val { font-size: 18px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .kpi-val.accent { color: var(--accent); }
+    .market-bar { margin-top: 10px; }
+    .market-bar .top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+    .market-bar .top .muted { color: var(--muted); }
+    .bar-track { height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; overflow: hidden; position: relative; }
+    .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+    .bar-fill.low { background: #ef4444; }
+    .bar-fill.mid { background: #f59e0b; }
+    .calib-row {
+      display: grid;
+      grid-template-columns: 70px 1fr 80px;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 12px;
+    }
+    .calib-row .rng { color: var(--muted); }
+    .calib-row .vs { text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; }
+    .calib-row .vs .actual { font-weight: 700; }
+    .calib-row .vs .exp { color: var(--muted); }
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .detail-row:first-child { border-top: none; }
+    .hit-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .hit-dot.hit { background: var(--accent); }
+    .hit-dot.miss { background: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <button class="tab active" data-view="coupons">Kuponlar</button>
+    <button class="tab" data-view="stats">Istatistikler</button>
+  </div>
+
+  <div id="view-coupons">
+  <div>
+    <h1>Kuponlar</h1>
+    <div class="sub">Modelin en yuksek guvenli secimleri</div>
+  </div>
+
+  <div class="card">
+    <div>
+      <div class="label">Mac Sayisi</div>
+      <div class="legs-grid" id="legs-grid"></div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div class="row">
+        <div class="label">Min Olasilik</div>
+        <div class="prob-val" id="prob-val">65%</div>
+      </div>
+      <input type="range" id="prob-range" min="0.5" max="0.95" step="0.05" value="0.65" />
+      <div class="row" style="font-size: 10px; color: var(--muted); margin-top: 2px;">
+        <span>50%</span><span>95%</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div class="label">Marketler</div>
+      <div class="markets" id="markets"></div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div class="label">API URL</div>
+      <input
+        id="api-base"
+        type="text"
+        value="http://127.0.0.1:8000"
+        style="width:100%; margin-top:6px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:12px;"
+      />
+    </div>
+  </div>
+
+  <div id="output"></div>
+  </div>
+
+  <div id="view-stats" class="hidden">
+    <div>
+      <h1>Istatistikler</h1>
+      <div class="sub">Tahmin tutturma oranlari — pazar bazli ve kalibrasyon</div>
+    </div>
+    <div id="stats-output"></div>
+  </div>
+
+  <script>
+    const MARKETS = [
+      { value: "1X2", label: "Mac Sonucu" },
+      { value: "double_chance", label: "Cifte Sans" },
+      { value: "btts", label: "KG" },
+      { value: "over_under", label: "Alt/Ust" },
+      { value: "odd_even", label: "Tek/Cift" },
+      { value: "correct_score", label: "Kesin Skor" },
+    ];
+
+    const state = {
+      legs: 3,
+      minProb: 0.65,
+      markets: new Set(["1X2", "double_chance", "btts"]),
+      apiBase: "http://127.0.0.1:8000",
+    };
+
+    // Legs buttons
+    const legsGrid = document.getElementById("legs-grid");
+    [1, 2, 3, 4].forEach((n) => {
+      const b = document.createElement("button");
+      b.className = "leg-btn" + (state.legs === n ? " active" : "");
+      b.textContent = n === 1 ? "Banko" : n + "'lu";
+      b.onclick = () => { state.legs = n; renderLegs(); fetchCoupons(); };
+      legsGrid.appendChild(b);
+    });
+    function renderLegs() {
+      [...legsGrid.children].forEach((b, i) => {
+        b.className = "leg-btn" + (state.legs === i + 1 ? " active" : "");
+      });
+    }
+
+    // Prob slider
+    const probRange = document.getElementById("prob-range");
+    const probVal = document.getElementById("prob-val");
+    probRange.oninput = (e) => {
+      state.minProb = Number(e.target.value);
+      probVal.textContent = Math.round(state.minProb * 100) + "%";
+    };
+    probRange.onchange = fetchCoupons;
+
+    // Markets
+    const marketsEl = document.getElementById("markets");
+    MARKETS.forEach((m) => {
+      const b = document.createElement("button");
+      b.className = "market-chip" + (state.markets.has(m.value) ? " active" : "");
+      b.textContent = m.label;
+      b.onclick = () => {
+        if (state.markets.has(m.value)) state.markets.delete(m.value);
+        else state.markets.add(m.value);
+        b.className = "market-chip" + (state.markets.has(m.value) ? " active" : "");
+        fetchCoupons();
+      };
+      marketsEl.appendChild(b);
+    });
+
+    // API base
+    const apiBaseEl = document.getElementById("api-base");
+    apiBaseEl.onchange = (e) => { state.apiBase = e.target.value.replace(/\/$/, ""); fetchCoupons(); };
+
+    const output = document.getElementById("output");
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function formatSelection(leg) {
+      if (leg.market.startsWith("over_under_")) {
+        const line = leg.market.replace("over_under_", "");
+        return (leg.selection === "over" ? "Ust " : "Alt ") + line;
+      }
+      if (leg.market === "correct_score") return "Skor " + leg.selection.replace("-", ":");
+      if (leg.market === "btts") return leg.selection === "yes" ? "KG Var" : "KG Yok";
+      if (leg.market === "odd_even") return leg.selection === "odd" ? "Tek" : "Cift";
+      if (leg.market === "1X2" || leg.market === "double_chance") return leg.selection;
+      return leg.selection_label;
+    }
+
+    function formatTime(iso) {
+      const normalized = iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z";
+      const d = new Date(normalized);
+      return d.toLocaleString("tr-TR", {
+        day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+        timeZone: "Europe/Istanbul",
+      });
+    }
+
+    function renderLegRow(leg) {
+      return `
+        <div class="leg-wrap">
+          <div class="leg" onclick="toggleStats(${leg.match_id}, this)">
+            <div style="flex:1; min-width:0;">
+              <div class="leg-teams">${escapeHtml(leg.home_team)} <span style="opacity:0.5;">vs</span> ${escapeHtml(leg.away_team)}</div>
+              <div class="leg-sel"><span class="mk">${escapeHtml(leg.market_label)}:</span> <span class="sel">${escapeHtml(formatSelection(leg))}</span></div>
+            </div>
+            <div class="leg-right">
+              <div class="leg-prob">${(leg.prob * 100).toFixed(0)}%</div>
+              <div class="leg-time">${escapeHtml(formatTime(leg.kickoff))}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const predCache = new Map();
+    async function toggleStats(matchId, legEl) {
+      const wrap = legEl.parentElement;
+      const existing = wrap.querySelector(".stats");
+      if (existing) { existing.remove(); return; }
+
+      const box = document.createElement("div");
+      box.className = "stats";
+      box.innerHTML = `<div style="color:var(--muted); font-size:11px;">Yukleniyor...</div>`;
+      wrap.appendChild(box);
+
+      try {
+        let data = predCache.get(matchId);
+        if (!data) {
+          const res = await fetch(`${state.apiBase}/predictions/${matchId}`, { cache: "no-store" });
+          if (!res.ok) throw new Error("Tahmin bulunamadi (API " + res.status + ")");
+          data = await res.json();
+          predCache.set(matchId, data);
+        }
+        box.innerHTML = renderStats(data);
+      } catch (err) {
+        box.innerHTML = `<div style="color:#fca5a5; font-size:11px;">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function statRow(name, p) {
+      const pct = (p * 100).toFixed(1);
+      return `
+        <div class="stat-row">
+          <div class="name">${escapeHtml(name)}</div>
+          <div class="bar-wrap"><div class="bar" style="width:${pct}%;"></div></div>
+          <div class="pct">${pct}%</div>
+        </div>
+      `;
+    }
+
+    function renderStats(data) {
+      const p = data.payload || {};
+      const parts = [];
+      if (data.lambda_home != null) {
+        parts.push(`
+          <div class="lambdas">
+            <span>xG Ev: <strong>${data.lambda_home.toFixed(2)}</strong></span>
+            <span>xG Dep: <strong>${data.lambda_away.toFixed(2)}</strong></span>
+          </div>
+        `);
+      }
+      if (p["1X2"]) {
+        parts.push(`<div class="grp"><div class="grp-title">Mac Sonucu</div>
+          ${statRow("1 (Ev)", p["1X2"]["1"] ?? 0)}
+          ${statRow("X (Berabere)", p["1X2"]["X"] ?? 0)}
+          ${statRow("2 (Deplasman)", p["1X2"]["2"] ?? 0)}
+        </div>`);
+      }
+      if (p.double_chance) {
+        parts.push(`<div class="grp"><div class="grp-title">Cifte Sans</div>
+          ${statRow("1X", p.double_chance["1X"] ?? 0)}
+          ${statRow("12", p.double_chance["12"] ?? 0)}
+          ${statRow("X2", p.double_chance["X2"] ?? 0)}
+        </div>`);
+      }
+      if (p.over_under && p.over_under["2.5"]) {
+        const ou = p.over_under["2.5"];
+        parts.push(`<div class="grp"><div class="grp-title">Alt/Ust 2.5</div>
+          ${statRow("Ust 2.5", ou.over ?? 0)}
+          ${statRow("Alt 2.5", ou.under ?? 0)}
+        </div>`);
+      }
+      if (p.btts) {
+        parts.push(`<div class="grp"><div class="grp-title">KG Var/Yok</div>
+          ${statRow("KG Var", p.btts.yes ?? 0)}
+          ${statRow("KG Yok", p.btts.no ?? 0)}
+        </div>`);
+      }
+      if (p.odd_even) {
+        parts.push(`<div class="grp"><div class="grp-title">Tek/Cift</div>
+          ${statRow("Tek", p.odd_even.odd ?? 0)}
+          ${statRow("Cift", p.odd_even.even ?? 0)}
+        </div>`);
+      }
+      if (Array.isArray(p.correct_score_top10) && p.correct_score_top10.length) {
+        const top = p.correct_score_top10.slice(0, 5);
+        parts.push(`<div class="grp"><div class="grp-title">En Olasi Skorlar</div>
+          ${top.map((e) => {
+            const [score, prob] = Object.entries(e)[0];
+            return statRow(score.replace("-", ":"), prob);
+          }).join("")}
+        </div>`);
+      }
+      return parts.join("") || `<div style="color:var(--muted); font-size:11px;">Veri yok</div>`;
+    }
+
+    function renderCoupon(coupon, primary) {
+      return `
+        <div class="coupon ${primary ? "primary" : ""}">
+          <div class="coupon-header">
+            <span class="badge">${coupon.num_legs === 1 ? "Banko" : coupon.num_legs + "'lu Kupon"}</span>
+            <div>
+              <div class="win-label">Kazanma</div>
+              <div class="win-val">${(coupon.combined_prob * 100).toFixed(1)}%</div>
+            </div>
+          </div>
+          ${coupon.legs.map(renderLegRow).join("")}
+        </div>
+      `;
+    }
+
+    let abortCtrl = null;
+    async function fetchCoupons() {
+      if (abortCtrl) abortCtrl.abort();
+      abortCtrl = new AbortController();
+      output.innerHTML = `<div class="msg info">Hesaplaniyor...</div>`;
+
+      const params = new URLSearchParams({
+        min_prob: String(state.minProb),
+        legs: String(state.legs),
+      });
+      if (state.markets.size > 0) params.set("markets", [...state.markets].join(","));
+
+      try {
+        const res = await fetch(`${state.apiBase}/coupons?${params}`, {
+          cache: "no-store", signal: abortCtrl.signal,
+        });
+        if (!res.ok) throw new Error("API " + res.status);
+        const data = await res.json();
+
+        let html = "";
+        if (data.primary) {
+          html += renderCoupon(data.primary, true);
+        } else {
+          html += `
+            <div class="msg warn">
+              <strong>Kriterlere uyan kupon bulunamadi</strong>
+              <div style="margin-top:4px; font-size:13px; opacity:0.8;">
+                ${data.counts.qualifying_picks} mac esikleri gecti ama ${data.filters.num_legs} bacak icin yeterli degil.
+                Min olasiligi dusur veya mac sayisini azalt.
+              </div>
+            </div>
+          `;
+        }
+        if (data.alternatives?.length) {
+          html += `<div class="section-h">Alternatifler</div>`;
+          data.alternatives.forEach((c) => { html += renderCoupon(c, false); });
+        }
+        if (state.legs !== 1 && data.bankos?.length) {
+          html += `<div class="section-h">En Guvenli Bankolar</div><div class="banko-list">`;
+          data.bankos.forEach((c) => {
+            const leg = c.legs[0];
+            html += `
+              <div class="banko-row">
+                <div style="flex:1; min-width:0;">
+                  <div class="leg-teams">${escapeHtml(leg.home_team)} <span style="opacity:0.5;">vs</span> ${escapeHtml(leg.away_team)}</div>
+                  <div class="banko-sel">${escapeHtml(formatSelection(leg))}</div>
+                </div>
+                <div style="text-align:right; margin-left:12px;">
+                  <div class="leg-prob" style="color:var(--accent);">${(leg.prob * 100).toFixed(0)}%</div>
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+        html += `
+          <div class="disclaimer">
+            Kuponlar modelin <strong>en guvenli tahmini</strong> olan secimlerdir.<br />
+            <span class="warn">Not: yuksek olasilik = dusuk oran. Bookmaker oranlarinin entegrasyonundan sonra "deger" kuponlari da eklenecek.</span>
+          </div>
+        `;
+        output.innerHTML = html;
+      } catch (err) {
+        if (err.name === "AbortError") return;
+        output.innerHTML = `<div class="msg err">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    fetchCoupons();
+
+    // ───────────── Tabs ─────────────
+    const viewCoupons = document.getElementById("view-coupons");
+    const viewStats = document.getElementById("view-stats");
+    const statsOutput = document.getElementById("stats-output");
+    let statsLoaded = false;
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const v = btn.dataset.view;
+        viewCoupons.classList.toggle("hidden", v !== "coupons");
+        viewStats.classList.toggle("hidden", v !== "stats");
+        if (v === "stats" && !statsLoaded) { statsLoaded = true; fetchStats(); }
+      };
+    });
+
+    function barClassFor(rate) {
+      if (rate >= 0.7) return "";
+      if (rate >= 0.55) return "mid";
+      return "low";
+    }
+
+    function marketLabel(m) {
+      const map = {
+        "1X2": "Mac Sonucu",
+        "double_chance": "Cifte Sans",
+        "btts": "KG Var/Yok",
+        "odd_even": "Tek/Cift",
+        "correct_score": "Kesin Skor",
+      };
+      if (map[m]) return map[m];
+      if (m.startsWith("over_under_")) return "Alt/Ust " + m.replace("over_under_", "");
+      return m;
+    }
+
+    async function fetchStats() {
+      statsOutput.innerHTML = `<div class="msg info">Yukleniyor...</div>`;
+      try {
+        const res = await fetch(`${state.apiBase}/stats/accuracy?limit=2000`, { cache: "no-store" });
+        if (!res.ok) throw new Error("API " + res.status);
+        const data = await res.json();
+
+        const overall = data.overall;
+        let html = `
+          <div class="card">
+            <div class="kpi-grid">
+              <div class="kpi">
+                <div class="kpi-label">Maclar</div>
+                <div class="kpi-val">${data.matches_evaluated}</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Pick</div>
+                <div class="kpi-val">${overall.picks}</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Tutturma</div>
+                <div class="kpi-val accent">${(overall.hit_rate * 100).toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (data.matches_evaluated < 50) {
+          html += `
+            <div class="msg warn" style="font-size:12px;">
+              Sadece <strong>${data.matches_evaluated}</strong> bitmis mac uzerinde tahmin mevcut.
+              Istatistik anlamli olmasi icin gecmise dogru tahmin backfill'i yapilmali.
+            </div>
+          `;
+        }
+
+        const sortedMarkets = Object.entries(data.by_market).sort((a, b) => b[1].hit_rate - a[1].hit_rate);
+        html += `<div class="section-h">Pazara Gore Tutturma</div><div class="card">`;
+        for (const [m, s] of sortedMarkets) {
+          html += `
+            <div class="market-bar">
+              <div class="top">
+                <span>${escapeHtml(marketLabel(m))}</span>
+                <span class="muted">${s.hits}/${s.picks} &middot; ort. guven ${(s.avg_prob*100).toFixed(0)}%</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill ${barClassFor(s.hit_rate)}" style="width:${(s.hit_rate*100).toFixed(1)}%;"></div>
+              </div>
+              <div style="font-size:11px; text-align:right; margin-top:2px; font-variant-numeric:tabular-nums;">${(s.hit_rate*100).toFixed(1)}%</div>
+            </div>
+          `;
+        }
+        html += `</div>`;
+
+        html += `<div class="section-h">Kalibrasyon (guven vs gercek)</div><div class="card">`;
+        for (const b of data.calibration) {
+          if (b.picks === 0) continue;
+          html += `
+            <div class="calib-row">
+              <div class="rng">${b.range}</div>
+              <div class="bar-track"><div class="bar-fill ${barClassFor(b.hit_rate)}" style="width:${(b.hit_rate*100).toFixed(1)}%;"></div></div>
+              <div class="vs">
+                <span class="actual">${(b.hit_rate*100).toFixed(0)}%</span>
+                <span class="exp"> / bekl. ${(b.avg_prob*100).toFixed(0)}%</span>
+                <div style="font-size:10px; color:var(--muted);">${b.hits}/${b.picks}</div>
+              </div>
+            </div>
+          `;
+        }
+        html += `</div>`;
+
+        if (data.details && data.details.length) {
+          html += `<div class="section-h">Son Pickler</div><div class="card">`;
+          for (const d of data.details.slice(0, 40)) {
+            const dt = new Date(d.kickoff.endsWith("Z") ? d.kickoff : d.kickoff + "Z");
+            const dateStr = dt.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+            html += `
+              <div class="detail-row">
+                <div class="hit-dot ${d.hit ? "hit" : "miss"}"></div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:12px;">${escapeHtml(d.home_team)} <span style="color:var(--muted);">vs</span> ${escapeHtml(d.away_team)}</div>
+                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">
+                    ${escapeHtml(marketLabel(d.market))}: <span style="color:var(--text);">${escapeHtml(d.pick)}</span> (${(d.pick_prob*100).toFixed(0)}%) → ${escapeHtml(d.actual)}
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;">${escapeHtml(d.score)}</div>
+                  <div style="font-size:10px; color:var(--muted);">${escapeHtml(dateStr)}</div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        statsOutput.innerHTML = html;
+      } catch (err) {
+        statsOutput.innerHTML = `<div class="msg err">${escapeHtml(err.message)}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
