@@ -49,6 +49,9 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 
 from app.db import SessionLocal
+from app.features.adjust import adjust_rates, score_matrix_from_rates
+from app.features.motivation import compute_team_motivation
+from app.features.standings import build_standings
 from app.ml.dixon_coles import DixonColesModel
 from app.ml.markets import build_full_payload
 from app.models.match import Match
@@ -62,7 +65,37 @@ MODEL_XI = 0.0018
 def _build_model_version(n_train: int, n_xg: int = 0) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
     tag = f"xg{n_xg}" if n_xg > 0 else "g"
-    return f"dc-pooled-l2_{MODEL_L2}-xi_{MODEL_XI}-{tag}-n_{n_train}-{stamp}"
+    return f"dc-pooled-l2_{MODEL_L2}-xi_{MODEL_XI}-{tag}-mot-n_{n_train}-{stamp}"
+
+
+_STANDINGS_CACHE: dict[tuple[str, str, str], object] = {}
+
+
+def _standings_cached(db, league: str, season: str, kickoff: datetime):
+    """Avoid rebuilding the same table for every match in the same round."""
+    # Bucket by day so close-together fixtures in a round share a cache entry.
+    day_key = kickoff.strftime("%Y-%m-%d") if kickoff else "now"
+    key = (league, season, day_key)
+    if key not in _STANDINGS_CACHE:
+        _STANDINGS_CACHE[key] = build_standings(db, league, season, kickoff)
+    return _STANDINGS_CACHE[key]
+
+
+def _mot_to_json(m):
+    if m is None:
+        return None
+    return {
+        "team": m.team_name,
+        "rank": m.rank,
+        "played": m.played,
+        "matches_left": m.matches_left,
+        "relegation_risk": round(m.relegation_risk, 3),
+        "title_push": round(m.title_push, 3),
+        "europe_push": round(m.europe_push, 3),
+        "dead_rubber": round(m.dead_rubber, 3),
+        "intensity": round(m.intensity, 3),
+        "reasons": m.reasons,
+    }
 
 
 def _days_ago(kickoff: datetime, now: datetime) -> int:
@@ -197,9 +230,27 @@ def run(
                 skipped_unknown_team += 1
                 continue
 
-            matrix = model.score_matrix(home_name, away_name)
+            base_lam, base_mu = model.rates(home_name, away_name)
+
+            # Motivation adjustment: build the league table as of kickoff
+            # and derive per-team motivation. Same-league cache because all
+            # matches in one fixture round share a standings snapshot.
+            standings = _standings_cached(db, m.league, m.season, m.kickoff)
+            home_mot = compute_team_motivation(standings, m.home_team_id)
+            away_mot = compute_team_motivation(standings, m.away_team_id)
+            adj = adjust_rates(base_lam, base_mu, home_mot, away_mot)
+
+            matrix = score_matrix_from_rates(adj.lam, adj.mu, model.rho)
             payload = build_full_payload(matrix)
-            lam, mu = model.rates(home_name, away_name)
+            # Attach context block so the UI can render the "neden" panel.
+            payload["context"] = {
+                "base_lambda": {"home": adj.base_lambda, "away": adj.base_mu},
+                "adjusted_lambda": {"home": adj.lam, "away": adj.mu},
+                "multipliers": {"home": adj.home_multiplier, "away": adj.away_multiplier},
+                "home_motivation": _mot_to_json(home_mot),
+                "away_motivation": _mot_to_json(away_mot),
+                "reasons": adj.reasons,
+            }
 
             # Upsert: drop any existing Prediction rows for this match and
             # insert one fresh row. The API route orders by created_at desc
@@ -210,8 +261,8 @@ def run(
                     match_id=m.id,
                     model_version=model_version,
                     payload=payload,
-                    lambda_home=float(lam),
-                    lambda_away=float(mu),
+                    lambda_home=float(adj.lam),
+                    lambda_away=float(adj.mu),
                 )
             )
             written += 1
