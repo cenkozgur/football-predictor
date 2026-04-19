@@ -61,6 +61,16 @@ jobs:
       - name: Generate predictions for upcoming matches
         run: python scripts/predict_upcoming.py
 
+      - name: Snapshot today's coupon suggestions into history
+        # Persists whatever /coupons would return right now, so the app can
+        # show "geçmiş kuponlar" with hit/miss badges after matches settle.
+        run: python scripts/record_daily_coupons.py
+
+      - name: Resolve yesterday's coupons from finished match scores
+        # Flips hit/miss on every leg whose underlying match now has a score;
+        # marks a coupon itself as won/lost once every leg is resolved.
+        run: python scripts/resolve_coupons.py
+
       - name: Checkpoint SQLite WAL
         run: |
           sudo apt-get install -y sqlite3
