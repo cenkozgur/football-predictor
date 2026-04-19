@@ -2,6 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, coupon_history, coupons, matches, predictions, stats
+from app.db import Base, engine
+from app import models  # noqa: F401 — registers tables on Base.metadata
+
+# No Alembic in this project; create_all is idempotent and safe to call on
+# every boot (it no-ops for tables that already exist). Lets us ship new
+# tables — like coupons / coupon_legs — without a manual migration step.
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Football Predictor API",
