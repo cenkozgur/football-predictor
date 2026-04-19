@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -28,6 +28,12 @@ class Match(Base):
     ht_away: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     status: Mapped[str] = mapped_column(String(16), default="scheduled", nullable=False)
+
+    # Expected goals (Understat). Nullable: only populated for top-5 leagues
+    # that Understat covers (EPL, BL1, SA, PD, FL1). Other leagues fall back
+    # to ft_home/ft_away in the model.
+    xg_home: Mapped[float | None] = mapped_column(Float, nullable=True)
+    xg_away: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     home_team: Mapped[Team] = relationship(foreign_keys=[home_team_id])
     away_team: Mapped[Team] = relationship(foreign_keys=[away_team_id])

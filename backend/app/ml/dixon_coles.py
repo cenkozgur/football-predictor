@@ -149,8 +149,10 @@ class DixonColesModel:
         home_ix = matches["home_team"].astype(str).map(team_idx).to_numpy()
         away_ix = matches["away_team"].astype(str).map(team_idx).to_numpy()
         league_ix = league_col.map(league_idx).to_numpy()
-        home_goals = matches["home_goals"].to_numpy(dtype=int)
-        away_goals = matches["away_goals"].to_numpy(dtype=int)
+        # Goals may be float (when callers pass xG as the goal signal). We keep
+        # them float and use a continuous Poisson log-likelihood below.
+        home_goals = matches["home_goals"].to_numpy(dtype=float)
+        away_goals = matches["away_goals"].to_numpy(dtype=float)
 
         # Parameter vector: [alpha(n), beta(n), gamma(nl), delta(nl), rho]
         x0 = np.concatenate(
@@ -165,8 +167,13 @@ class DixonColesModel:
 
         log_fact_h = _log_factorial(home_goals)
         log_fact_a = _log_factorial(away_goals)
-        low_score_mask = (home_goals <= 1) & (away_goals <= 1)
+        # Dixon-Coles τ correction only makes sense for discrete integer 0/1
+        # goals. When training on xG (non-integer rates) we skip it.
+        _is_int = (np.mod(home_goals, 1) == 0) & (np.mod(away_goals, 1) == 0)
+        low_score_mask = _is_int & (home_goals <= 1) & (away_goals <= 1)
         low_score_idx = np.where(low_score_mask)[0]
+        home_goals_int = home_goals.astype(int)
+        away_goals_int = away_goals.astype(int)
 
         def neg_log_likelihood(params: np.ndarray) -> float:
             alpha = params[:n]
@@ -188,8 +195,8 @@ class DixonColesModel:
                 tau = np.ones_like(log_lik)
                 for k in low_score_idx:
                     t = _tau(
-                        int(home_goals[k]),
-                        int(away_goals[k]),
+                        int(home_goals_int[k]),
+                        int(away_goals_int[k]),
                         float(lam[k]),
                         float(mu[k]),
                         float(rho),

@@ -34,6 +34,15 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
 
+      - name: Migrate — add xg columns if missing
+        run: python scripts/migrate_add_xg.py
+
+      - name: Ingest Understat xG (top-5 leagues)
+        # GitHub runners are US-based so Understat is not Turkey-blocked here.
+        # Seasons 2023 and 2024 are historical backfill (cheap idempotent
+        # updates); 2025 is the live season.
+        run: python -m app.ingestion.understat --seasons 2023,2024,2025
+
       - name: Generate predictions for upcoming matches
         run: python scripts/predict_upcoming.py
 

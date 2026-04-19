@@ -59,9 +59,10 @@ MODEL_L2 = 2.0
 MODEL_XI = 0.0018
 
 
-def _build_model_version(n_train: int) -> str:
+def _build_model_version(n_train: int, n_xg: int = 0) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
-    return f"dc-pooled-l2_{MODEL_L2}-xi_{MODEL_XI}-n_{n_train}-{stamp}"
+    tag = f"xg{n_xg}" if n_xg > 0 else "g"
+    return f"dc-pooled-l2_{MODEL_L2}-xi_{MODEL_XI}-{tag}-n_{n_train}-{stamp}"
 
 
 def _days_ago(kickoff: datetime, now: datetime) -> int:
@@ -71,8 +72,15 @@ def _days_ago(kickoff: datetime, now: datetime) -> int:
     return max(0, (now - kickoff).days)
 
 
-def _load_training_frame(db) -> pd.DataFrame:
-    """Load every finished match as a Dixon-Coles training row."""
+def _load_training_frame(db) -> tuple[pd.DataFrame, int]:
+    """Load every finished match as a Dixon-Coles training row.
+
+    When Understat xG is available for a match we use it as the goal signal
+    instead of realized goals — training the model on "deserved" expected
+    goals is less noisy than on 1-sample Poisson realizations. Falls back to
+    ft_home/ft_away when xG is missing (Championship, Eredivisie, Primeira
+    and any pre-2014 historical match).
+    """
     rows = db.scalars(
         select(Match)
         .where(Match.status == "finished")
@@ -80,18 +88,25 @@ def _load_training_frame(db) -> pd.DataFrame:
     ).all()
 
     today = datetime.now(tz=timezone.utc)
-    records = [
-        {
+    records = []
+    n_xg = 0
+    for m in rows:
+        if m.xg_home is not None and m.xg_away is not None:
+            hg, ag = float(m.xg_home), float(m.xg_away)
+            n_xg += 1
+        else:
+            hg, ag = float(m.ft_home), float(m.ft_away)
+        records.append({
             "home_team": m.home_team.name,
             "away_team": m.away_team.name,
-            "home_goals": m.ft_home,
-            "away_goals": m.ft_away,
+            "home_goals": hg,
+            "away_goals": ag,
             "league": m.league,
             "days_ago": _days_ago(m.kickoff, today),
-        }
-        for m in rows
-    ]
-    return pd.DataFrame.from_records(records)
+        })
+    if records:
+        print(f"  using xG for {n_xg}/{len(records)} training rows")
+    return pd.DataFrame.from_records(records), n_xg
 
 
 def _select_target_matches(
@@ -141,7 +156,7 @@ def run(
     Returns the number of Prediction rows written.
     """
     with SessionLocal() as db:
-        df = _load_training_frame(db)
+        df, n_xg = _load_training_frame(db)
         if df.empty:
             print("No finished matches in DB — run scripts/ingest_all.py first.")
             return 0
@@ -165,7 +180,7 @@ def run(
             )
             return 0
 
-        model_version = _build_model_version(len(df))
+        model_version = _build_model_version(len(df), n_xg=n_xg)
         written = 0
         skipped_unknown_team = 0
 
