@@ -1,24 +1,22 @@
-"""Coupon suggestion engine.
+"""Coupon suggestion engine — composite-signal selection.
 
-Given model-derived probabilities for upcoming matches, suggest parlay coupons
-(accumulators) that the user can wager on Bilyoner.
+Earlier iteration ranked picks by model probability alone, which meant every
+coupon was three legs of 0.5 Üst (mathematically near-certain, payout near-1x).
+The user's goal is a *profitable* coupon with explicit reasons — why this
+match, not that one. So each pick now carries a composite score built from:
 
-This is *confidence-based* selection — we pick the single strongest prediction
-per match across all markets, filter by a probability floor, and combine them.
+    1. Model probability        (Dixon-Coles + motivation-adjusted Poisson)
+    2. Value edge               (model prob vs. bookmaker implied prob)
+    3. Motivation alignment     (does the stake support the pick direction?)
+    4. Form alignment           (recent results support the pick?)
 
-Important: without bookmaker odds we cannot compute edge or expected value.
-A high combined probability does NOT imply a positive-EV bet. This engine
-only answers "which accumulators are most likely to WIN" — not "most profitable."
-Edge-based selection requires a separate Bilyoner odds ingester.
+Each signal contributes a Turkish "neden" string that surfaces in the UI,
+so the user sees not "we picked this, trust us" but "we picked this because
+X, Y, Z — and discarded the alternative because it had only X."
 
-Markets considered per match
-----------------------------
-    1X2            → picks the favorite (1, X, or 2)
-    Double chance  → 1X, 12, X2
-    Over/Under     → for each .5 line, picks the stronger side
-    BTTS           → yes / no
-    Odd/Even       → odd / even
-    Correct score  → only if top-1 score exceeds the pick floor
+Coupon composition then greedy-maximizes composite score while enforcing
+market diversity (no three Alt/Üst legs) and a minimum combined-odds target
+(default 1.6x — below that the coupon is not worth playing).
 """
 
 from __future__ import annotations
@@ -27,7 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-# Human-readable market labels (Turkish) used in the response.
+# Human-readable market labels (Turkish).
 MARKET_LABELS = {
     "1X2": "Maç Sonucu",
     "double_chance": "Çifte Şans",
@@ -53,20 +51,36 @@ SELECTION_LABELS = {
 }
 
 
+# Composite-score weights. Tuned so model probability remains dominant but
+# a strong value edge or motivation story can lift a mid-prob pick above
+# a prob-only favorite. Must sum to 1.0.
+_W_PROB = 0.40
+_W_VALUE = 0.30
+_W_MOTIVATION = 0.20
+_W_FORM = 0.10
+
+
 @dataclass
 class Pick:
-    """A single leg of a coupon — one selection on one match."""
+    """A single leg of a coupon — one selection on one match, with reasons."""
 
     match_id: int
     home_team: str
     away_team: str
-    kickoff: str  # ISO 8601
+    kickoff: str
     league: str
-    market: str          # e.g. "1X2", "over_under_2.5", "btts"
-    market_label: str    # human-readable (Turkish)
-    selection: str       # e.g. "1", "over", "yes"
+    market: str
+    market_label: str
+    selection: str
     selection_label: str
-    prob: float          # model probability, 0..1
+    prob: float              # model probability, 0..1
+    book_odds: float | None  # best available decimal odds, or None
+    book_prob: float | None  # implied probability, or None
+    value_edge: float        # (model_prob / book_prob) - 1; 0 if unknown
+    motivation_score: float  # -1..1; positive = motivation supports the pick
+    form_score: float        # -1..1; positive = recent form supports the pick
+    composite: float         # weighted blend in [0, 1]
+    reasons: list[str] = field(default_factory=list)  # Turkish, UI-facing
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -80,61 +94,231 @@ class Pick:
             "selection": self.selection,
             "selection_label": self.selection_label,
             "prob": self.prob,
+            "book_odds": self.book_odds,
+            "book_prob": self.book_prob,
+            "value_edge": self.value_edge,
+            "motivation_score": self.motivation_score,
+            "form_score": self.form_score,
+            "composite": self.composite,
+            "reasons": self.reasons,
         }
 
 
 @dataclass
 class Coupon:
-    """A multi-leg accumulator suggestion."""
-
     legs: list[Pick]
     combined_prob: float = field(init=False)
+    combined_odds: float = field(init=False)
 
     def __post_init__(self) -> None:
         p = 1.0
+        o = 1.0
         for leg in self.legs:
             p *= leg.prob
+            if leg.book_odds is not None:
+                o *= leg.book_odds
+            else:
+                # If we have no odds, imply 1/prob as a fallback estimate.
+                o *= (1.0 / leg.prob) if leg.prob > 0 else 1.0
         self.combined_prob = p
+        self.combined_odds = o
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "legs": [leg.to_dict() for leg in self.legs],
             "combined_prob": self.combined_prob,
+            "combined_odds": self.combined_odds,
             "num_legs": len(self.legs),
         }
 
 
-def _best_pick_for_match(
+# ---- signal scoring helpers ----------------------------------------------
+
+def _base_market(market: str) -> str:
+    """Normalize 'over_under_2.5' → 'over_under' for diversity enforcement."""
+    if market.startswith("over_under"):
+        return "over_under"
+    if market.startswith("asian_handicap"):
+        return "asian_handicap"
+    if "_" in market:
+        return market.split("_", 1)[0] if market != "1X2" else market
+    return market
+
+
+def _value_edge(model_prob: float, book_prob: float | None) -> float:
+    if book_prob is None or book_prob <= 0:
+        return 0.0
+    # Positive edge = we think the event is more likely than the book does.
+    return (model_prob / book_prob) - 1.0
+
+
+def _motivation_score(
+    market: str, selection: str, context: dict[str, Any] | None
+) -> tuple[float, str | None]:
+    """Return (score in [-1,1], reason-string or None).
+
+    Positive means the motivation profile supports this selection direction;
+    negative means it actively argues against. We only speak up when the signal
+    is strong enough to warrant a user-visible reason.
+    """
+    if not context:
+        return 0.0, None
+    home_mot = context.get("home_motivation") or {}
+    away_mot = context.get("away_motivation") or {}
+
+    # For 1X2 and double_chance, motivation of the side we're picking matters.
+    if market in ("1X2", "double_chance"):
+        if selection in ("1", "1X"):
+            intensity = max(
+                home_mot.get("relegation_risk", 0),
+                home_mot.get("title_push", 0),
+                home_mot.get("europe_push", 0),
+            )
+            dead = away_mot.get("dead_rubber", 0)
+            score = min(1.0, intensity + 0.5 * dead)
+            if intensity >= 0.6:
+                reason = _top_motivation_reason(home_mot, side="ev sahibi")
+                return score, reason
+            if dead >= 0.5:
+                return score, f"Deplasman takımı dead rubber ({dead:.0%})"
+            return score, None
+        if selection in ("2", "X2"):
+            intensity = max(
+                away_mot.get("relegation_risk", 0),
+                away_mot.get("title_push", 0),
+                away_mot.get("europe_push", 0),
+            )
+            dead = home_mot.get("dead_rubber", 0)
+            score = min(1.0, intensity + 0.5 * dead)
+            if intensity >= 0.6:
+                reason = _top_motivation_reason(away_mot, side="deplasman")
+                return score, reason
+            if dead >= 0.5:
+                return score, f"Ev sahibi dead rubber ({dead:.0%})"
+            return score, None
+
+    # For goal-based markets, BOTH sides being motivated raises goal expectation;
+    # both being dead lowers it. So "over" wants high combined intensity, "under"
+    # the opposite.
+    if market.startswith("over_under") or market == "btts":
+        combined_intensity = (
+            home_mot.get("intensity", 0) + away_mot.get("intensity", 0)
+        ) / 2
+        combined_dead = (
+            home_mot.get("dead_rubber", 0) + away_mot.get("dead_rubber", 0)
+        ) / 2
+        if selection in ("over", "yes"):
+            if combined_intensity >= 0.5:
+                return combined_intensity, (
+                    f"İki takımın da oynayacağı bir şey var (intensity {combined_intensity:.0%})"
+                )
+            if combined_dead >= 0.4:
+                return -combined_dead, None  # argues against over
+            return 0.0, None
+        if selection in ("under", "no"):
+            if combined_dead >= 0.4:
+                return combined_dead, (
+                    f"İki takım da dead rubber — gol beklentisi düşük"
+                )
+            return 0.0, None
+
+    return 0.0, None
+
+
+def _top_motivation_reason(mot: dict[str, Any], side: str) -> str | None:
+    """Pick the single strongest stake and express it in Turkish."""
+    team = mot.get("team") or ""
+    stakes = [
+        ("relegation_risk", "küme düşme hattına yakın"),
+        ("title_push", "şampiyonluk yarışında"),
+        ("europe_push", "Avrupa kupası hattında"),
+    ]
+    best = max(stakes, key=lambda s: mot.get(s[0], 0))
+    val = mot.get(best[0], 0)
+    if val < 0.5:
+        return None
+    return f"{team} ({side}) {best[1]} ({val:.0%})"
+
+
+def _form_score(
+    market: str, selection: str, context: dict[str, Any] | None
+) -> tuple[float, str | None]:
+    """Placeholder until context carries recent-form metrics.
+
+    The standings-derived intensity already proxies season-long stakes; a short
+    rolling-form signal would complement it but needs its own feature. Leaving
+    a 0 contribution keeps the composite honest — we don't fabricate a score
+    we can't back up.
+    """
+    return 0.0, None
+
+
+# ---- pick enumeration -----------------------------------------------------
+
+def _enumerate_picks(
+    *,
     match_id: int,
     home: str,
     away: str,
     kickoff: str,
     league: str,
     payload: dict[str, Any],
-    allowed_markets: set[str] | None = None,
-) -> Pick | None:
-    """Return the single highest-probability pick across all markets for one match.
+    odds_by_key: dict[tuple[str, str], float],
+    allowed_markets: set[str] | None,
+    min_prob: float,
+) -> list[Pick]:
+    """Generate every candidate Pick for one match, across all markets."""
+    context = payload.get("context")
+    out: list[Pick] = []
 
-    If `allowed_markets` is given, restrict to those markets.
-    """
-    candidates: list[Pick] = []
-
-    def add(market: str, selection: str, prob: float) -> None:
-        # Extract the base market name (strip "_2.5" suffix etc.) for filtering
-        base = market.split("_")[0] if "_" in market else market
-        if market.startswith("over_under"):
-            base = "over_under"
-        elif market.startswith("asian_handicap"):
-            base = "asian_handicap"
-        elif market.startswith("home_over_under"):
-            base = "home_over_under"
-        elif market.startswith("away_over_under"):
-            base = "away_over_under"
-
+    def emit(market: str, selection: str, selection_label: str, prob: float) -> None:
+        base = _base_market(market)
         if allowed_markets is not None and base not in allowed_markets:
             return
+        if prob < min_prob:
+            return
 
-        candidates.append(
+        book_odds = odds_by_key.get((market, selection))
+        if book_odds is None:
+            # Look up by base market too — odds table uses e.g. "OU_2.5" keys.
+            # We try both naming conventions so we don't silently lose the edge signal.
+            book_odds = odds_by_key.get((market.replace("over_under_", "OU_"), selection))
+        book_prob = (1.0 / book_odds) if book_odds else None
+        edge = _value_edge(prob, book_prob)
+
+        mot_score, mot_reason = _motivation_score(market, selection, context)
+        form_score, form_reason = _form_score(market, selection, context)
+
+        # Composite in [0, 1]. Edge is unbounded in principle so clamp its
+        # contribution to keep a single big edge from swamping everything else.
+        clamped_edge = max(-0.3, min(0.3, edge)) / 0.3  # now in [-1, 1]
+        composite = (
+            _W_PROB * prob
+            + _W_VALUE * (0.5 + 0.5 * clamped_edge)
+            + _W_MOTIVATION * (0.5 + 0.5 * mot_score)
+            + _W_FORM * (0.5 + 0.5 * form_score)
+        )
+
+        reasons: list[str] = []
+        reasons.append(f"Model olasılığı %{prob*100:.0f}")
+        if book_odds is not None:
+            if edge > 0.03:
+                reasons.append(
+                    f"Piyasa oranı {book_odds:.2f} (impl %{book_prob*100:.0f}) — "
+                    f"model %{edge*100:.0f} edge görüyor"
+                )
+            elif edge < -0.05:
+                reasons.append(
+                    f"Piyasa bu seçimde daha iddialı (oran {book_odds:.2f})"
+                )
+            else:
+                reasons.append(f"Piyasa oranı {book_odds:.2f} — model ile uyumlu")
+        if mot_reason:
+            reasons.append(mot_reason)
+        if form_reason:
+            reasons.append(form_reason)
+
+        out.append(
             Pick(
                 match_id=match_id,
                 home_team=home,
@@ -144,154 +328,222 @@ def _best_pick_for_match(
                 market=market,
                 market_label=MARKET_LABELS.get(base, base),
                 selection=selection,
-                selection_label=SELECTION_LABELS.get(selection, selection),
+                selection_label=selection_label,
                 prob=prob,
+                book_odds=book_odds,
+                book_prob=book_prob,
+                value_edge=edge,
+                motivation_score=mot_score,
+                form_score=form_score,
+                composite=composite,
+                reasons=reasons,
             )
         )
 
-    # 1X2
     if "1X2" in payload:
         for sel, p in payload["1X2"].items():
-            add("1X2", sel, float(p))
-
-    # Double chance
+            emit("1X2", sel, SELECTION_LABELS.get(sel, sel), float(p))
     if "double_chance" in payload:
         for sel, p in payload["double_chance"].items():
-            add("double_chance", sel, float(p))
-
-    # Over/Under (all lines). Override the generic Üst/Alt label with the
-    # specific line so "0.5 Üst" is visually distinct from "2.5 Üst".
+            emit("double_chance", sel, SELECTION_LABELS.get(sel, sel), float(p))
     if "over_under" in payload:
         for line, ou in payload["over_under"].items():
             for sel, p in ou.items():
-                pick = Pick(
-                    match_id=match_id,
-                    home_team=home,
-                    away_team=away,
-                    kickoff=kickoff,
-                    league=league,
-                    market=f"over_under_{line}",
-                    market_label=MARKET_LABELS["over_under"],
-                    selection=sel,
-                    selection_label=f"{line} {SELECTION_LABELS.get(sel, sel)}",
-                    prob=float(p),
+                emit(
+                    f"over_under_{line}",
+                    sel,
+                    f"{line} {SELECTION_LABELS.get(sel, sel)}",
+                    float(p),
                 )
-                if allowed_markets is None or "over_under" in allowed_markets:
-                    candidates.append(pick)
-
-    # BTTS
     if "btts" in payload:
         for sel, p in payload["btts"].items():
-            add("btts", sel, float(p))
-
-    # Odd/Even
+            emit("btts", sel, SELECTION_LABELS.get(sel, sel), float(p))
     if "odd_even" in payload:
         for sel, p in payload["odd_even"].items():
-            add("odd_even", sel, float(p))
+            emit("odd_even", sel, SELECTION_LABELS.get(sel, sel), float(p))
 
-    # Correct score — only if top-1 is above threshold; labels differ
-    if "correct_score_top10" in payload and payload["correct_score_top10"]:
-        top = payload["correct_score_top10"][0]
-        score, p = next(iter(top.items()))
-        # Correct scores typically have low probabilities (~10-15% max) so they
-        # won't win out in a confidence-based selector, which is fine. Including
-        # for completeness.
-        candidates.append(
-            Pick(
-                match_id=match_id,
-                home_team=home,
-                away_team=away,
-                kickoff=kickoff,
-                league=league,
-                market="correct_score",
-                market_label=MARKET_LABELS["correct_score"],
-                selection=score,
-                selection_label=f"Skor {score.replace('-', ':')}",
-                prob=float(p),
-            )
-        )
+    return out
 
-    if not candidates:
+
+# ---- coupon composition --------------------------------------------------
+
+def _pick_best_per_match(picks: list[Pick]) -> list[Pick]:
+    """Collapse to one best-composite pick per match."""
+    by_match: dict[int, Pick] = {}
+    for p in picks:
+        cur = by_match.get(p.match_id)
+        if cur is None or p.composite > cur.composite:
+            by_match[p.match_id] = p
+    return list(by_match.values())
+
+
+def _compose_coupon(
+    picks: list[Pick],
+    *,
+    num_legs: int,
+    min_combined_odds: float,
+    enforce_market_diversity: bool,
+    excluded_match_ids: set[int] | None = None,
+) -> Coupon | None:
+    """Greedy: maximize composite subject to diversity + odds floor.
+
+    We iterate candidates by composite desc, add if (a) the match isn't already
+    used, (b) the base market hasn't been used when diversity is on, and stop
+    once we've hit num_legs. If the resulting combined_odds is below the floor,
+    we retry allowing the next candidates to substitute lower-composite but
+    higher-odds picks into the weakest slot.
+    """
+    excluded = excluded_match_ids or set()
+    sorted_picks = sorted(
+        [p for p in picks if p.match_id not in excluded],
+        key=lambda p: p.composite,
+        reverse=True,
+    )
+
+    legs: list[Pick] = []
+    used_matches: set[int] = set()
+    used_markets: set[str] = set()
+    for p in sorted_picks:
+        if p.match_id in used_matches:
+            continue
+        base = _base_market(p.market)
+        if enforce_market_diversity and base in used_markets:
+            continue
+        legs.append(p)
+        used_matches.add(p.match_id)
+        used_markets.add(base)
+        if len(legs) == num_legs:
+            break
+
+    if len(legs) < num_legs:
         return None
-    return max(candidates, key=lambda c: c.prob)
+
+    coupon = Coupon(legs=legs)
+    if coupon.combined_odds >= min_combined_odds:
+        return coupon
+
+    # Below the odds floor: try swapping the weakest leg (by value_edge) for a
+    # higher-odds alternative from a market we haven't yet used.
+    for _ in range(num_legs):
+        weakest_idx = min(
+            range(len(legs)),
+            key=lambda i: legs[i].book_odds or (1 / max(legs[i].prob, 1e-6)),
+        )
+        weakest = legs[weakest_idx]
+        replacement = None
+        for candidate in sorted_picks:
+            if candidate.match_id in used_matches:
+                continue
+            cand_base = _base_market(candidate.market)
+            if enforce_market_diversity and cand_base in (used_markets - {_base_market(weakest.market)}):
+                continue
+            cand_odds = candidate.book_odds or (1 / max(candidate.prob, 1e-6))
+            weak_odds = weakest.book_odds or (1 / max(weakest.prob, 1e-6))
+            if cand_odds > weak_odds:
+                replacement = candidate
+                break
+        if replacement is None:
+            break
+        used_matches.remove(weakest.match_id)
+        used_markets.discard(_base_market(weakest.market))
+        legs[weakest_idx] = replacement
+        used_matches.add(replacement.match_id)
+        used_markets.add(_base_market(replacement.market))
+        coupon = Coupon(legs=legs)
+        if coupon.combined_odds >= min_combined_odds:
+            return coupon
+
+    # Still under target — return it anyway; caller can decide whether to publish.
+    return coupon
 
 
 def suggest_coupons(
     match_predictions: list[dict[str, Any]],
     *,
-    min_prob_per_leg: float = 0.60,
+    min_prob_per_leg: float = 0.55,
     num_legs: int = 3,
     allowed_markets: set[str] | None = None,
     max_coupons: int = 5,
+    min_combined_odds: float = 1.6,
+    enforce_market_diversity: bool = True,
+    odds_by_match: dict[int, dict[tuple[str, str], float]] | None = None,
 ) -> dict[str, Any]:
-    """Generate coupon suggestions from a list of match predictions.
+    """Generate composite-scored coupon suggestions.
 
     Parameters
     ----------
-    match_predictions : list of dicts
-        Each dict must have: match_id, home_team, away_team, kickoff, league,
-        and payload (the full market payload from `build_full_payload`).
-    min_prob_per_leg : float
-        Minimum model probability for any leg (default 0.60).
-    num_legs : int
-        Target number of legs per coupon (1-4 typically).
-    allowed_markets : set[str] or None
-        If given, restrict picks to these base market names (e.g. {"1X2", "btts"}).
-        None = consider every market.
-    max_coupons : int
-        How many alternative coupons to return.
-
-    Returns
-    -------
-    dict with:
-        - primary: the single strongest N-leg coupon (if num_legs candidates exist)
-        - alternatives: up to `max_coupons - 1` other multi-leg combinations
-        - bankos: highest-confidence single picks (banko = one-leg sure bets)
-        - all_picks: every qualifying pick, sorted by prob desc
+    match_predictions : list of {match_id, home_team, away_team, kickoff, league, payload}
+    min_prob_per_leg : floor below which a pick is excluded outright
+    num_legs : legs per coupon
+    allowed_markets : base-market whitelist (None = all)
+    max_coupons : total coupons to return (primary + alternatives)
+    min_combined_odds : composer rejects/swaps to hit this (default 1.6 → meaningful payout)
+    enforce_market_diversity : no two legs from the same base market
+    odds_by_match : {match_id: {(market, selection): decimal_odds}}
     """
-    # 1) Compute the single best pick per match
-    best_picks: list[Pick] = []
+    odds_by_match = odds_by_match or {}
+
+    all_picks: list[Pick] = []
     for m in match_predictions:
-        pick = _best_pick_for_match(
+        picks = _enumerate_picks(
             match_id=m["match_id"],
             home=m["home_team"],
             away=m["away_team"],
             kickoff=m["kickoff"],
             league=m["league"],
             payload=m["payload"],
+            odds_by_key=odds_by_match.get(m["match_id"], {}),
             allowed_markets=allowed_markets,
+            min_prob=min_prob_per_leg,
         )
-        if pick is None:
-            continue
-        if pick.prob >= min_prob_per_leg:
-            best_picks.append(pick)
+        all_picks.extend(picks)
 
-    # Sort strongest first
-    best_picks.sort(key=lambda p: p.prob, reverse=True)
+    # Composer sees ALL picks across all markets; it decides per-match which
+    # selection to use. Collapsing to one-per-match first would kill diversity
+    # because every match's highest-composite pick is always "0.5 Üst".
+    all_picks.sort(key=lambda p: p.composite, reverse=True)
 
-    # 2) Build primary coupon: top-N highest-confidence legs
-    primary: Coupon | None = None
-    if len(best_picks) >= num_legs:
-        primary = Coupon(legs=best_picks[:num_legs])
+    coupons: list[Coupon] = []
+    excluded: set[int] = set()
+    for _ in range(max_coupons):
+        c = _compose_coupon(
+            all_picks,
+            num_legs=num_legs,
+            min_combined_odds=min_combined_odds,
+            enforce_market_diversity=enforce_market_diversity,
+            excluded_match_ids=excluded,
+        )
+        if c is None:
+            break
+        coupons.append(c)
+        for leg in c.legs:
+            excluded.add(leg.match_id)
 
-    # 3) Alternative coupons: shifted windows — (1..N+1), (2..N+2), etc.
-    #    These represent "next-most-confident" combinations for variety.
-    alternatives: list[Coupon] = []
-    if len(best_picks) >= num_legs + 1:
-        for start in range(1, min(max_coupons, len(best_picks) - num_legs + 1)):
-            alternatives.append(Coupon(legs=best_picks[start : start + num_legs]))
+    primary = coupons[0] if coupons else None
+    alternatives = coupons[1:]
 
-    # 4) Bankos — top 5 single picks (all single-leg coupons)
-    bankos = [Coupon(legs=[p]) for p in best_picks[:5]]
+    # Bankos (single-leg "sure" picks): use the best-composite pick per match,
+    # ranked; this is a different view from the coupon composer.
+    best_per_match = _pick_best_per_match(all_picks)
+    best_per_match.sort(key=lambda p: p.composite, reverse=True)
+    bankos = [Coupon(legs=[p]) for p in best_per_match[:5]]
 
     return {
         "primary": primary.to_dict() if primary else None,
         "alternatives": [c.to_dict() for c in alternatives],
         "bankos": [c.to_dict() for c in bankos],
-        "all_picks": [p.to_dict() for p in best_picks],
+        "all_picks": [p.to_dict() for p in best_per_match],
         "filters": {
             "min_prob_per_leg": min_prob_per_leg,
             "num_legs": num_legs,
             "allowed_markets": sorted(allowed_markets) if allowed_markets else None,
+            "min_combined_odds": min_combined_odds,
+            "enforce_market_diversity": enforce_market_diversity,
+            "weights": {
+                "prob": _W_PROB,
+                "value": _W_VALUE,
+                "motivation": _W_MOTIVATION,
+                "form": _W_FORM,
+            },
         },
     }

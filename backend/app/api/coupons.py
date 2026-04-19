@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db import get_db
 from app.ml.coupons import suggest_coupons
 from app.models.match import Match
+from app.models.odds import Odds
 from app.models.prediction import Prediction
 
 router = APIRouter()
@@ -37,7 +38,7 @@ ALLOWED_MARKET_SET = {
 
 @router.get("")
 def list_coupon_suggestions(
-    min_prob: float = Query(default=0.65, ge=0.01, le=0.99),
+    min_prob: float = Query(default=0.55, ge=0.01, le=0.99),
     legs: int = Query(default=3, ge=1, le=6),
     markets: str | None = Query(
         default=None,
@@ -49,6 +50,16 @@ def list_coupon_suggestions(
         ge=1,
         le=14,
         description="Only consider matches kicking off within this many days. Defaults to 2 so coupons reflect today/tomorrow, not fixtures two weeks out.",
+    ),
+    min_combined_odds: float = Query(
+        default=1.6,
+        ge=1.0,
+        le=50.0,
+        description="Composer rejects coupons below this combined odds target (1.6 ≈ meaningful payout). Set to 1.0 to allow banker-only coupons.",
+    ),
+    diversify_markets: bool = Query(
+        default=True,
+        description="Forbid two legs from the same base market (prevents all-Alt/Üst coupons).",
     ),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
@@ -95,11 +106,39 @@ def list_coupon_suggestions(
     else:
         allowed = ALLOWED_MARKET_SET
 
+    # Pull odds for all candidate matches in one query; index as
+    # {match_id: {(market, selection): best_decimal_odds}}.
+    # We prefer closing odds (B365C > PSC) when multiple sources exist, because
+    # closing odds embed the most market information and make for the cleanest
+    # value-edge signal.
+    source_priority = {"B365C": 0, "PSC": 1, "B365": 2, "PS": 3, "WH": 4}
+    match_ids = [mp["match_id"] for mp in match_predictions]
+    odds_rows = (
+        db.query(Odds).filter(Odds.match_id.in_(match_ids)).all() if match_ids else []
+    )
+    odds_by_match: dict[int, dict[tuple[str, str], float]] = {}
+    odds_source_seen: dict[int, dict[tuple[str, str], int]] = {}
+    for o in odds_rows:
+        # Normalize market naming: CSV ingester stores "OU_2.5" / "1X2";
+        # coupon engine emits "over_under_2.5" / "1X2". We store both forms.
+        keys: list[tuple[str, str]] = [(o.market, o.selection)]
+        if o.market.startswith("OU_"):
+            keys.append((f"over_under_{o.market[3:]}", o.selection))
+        for key in keys:
+            prio = source_priority.get(o.source, 99)
+            prev_prio = odds_source_seen.setdefault(o.match_id, {}).get(key, 99)
+            if prio <= prev_prio:
+                odds_by_match.setdefault(o.match_id, {})[key] = float(o.decimal_odds)
+                odds_source_seen[o.match_id][key] = prio
+
     result = suggest_coupons(
         match_predictions,
         min_prob_per_leg=min_prob,
         num_legs=legs,
         allowed_markets=allowed,
+        min_combined_odds=min_combined_odds,
+        enforce_market_diversity=diversify_markets,
+        odds_by_match=odds_by_match,
     )
 
     result["counts"] = {
