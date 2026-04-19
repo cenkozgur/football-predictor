@@ -29,15 +29,31 @@ class MatchOut(BaseModel):
 def list_matches(
     league: str | None = Query(default=None),
     upcoming: bool = Query(default=True),
+    status: str | None = Query(
+        default=None,
+        description="Filter by match status (scheduled, finished, live). Overrides `upcoming`.",
+    ),
     limit: int = Query(default=50, le=200),
     db: Session = Depends(get_db),
 ) -> list[MatchOut]:
     stmt = select(Match)
     if league:
         stmt = stmt.where(Match.league == league)
-    if upcoming:
+    # `status` takes priority over the older `upcoming` boolean because the UI
+    # needs an explicit "Biten" mode; without it the server silently returns
+    # upcoming rows and the "Biten" filter shows yaklaşan cards.
+    if status:
+        stmt = stmt.where(Match.status == status)
+        if status == "finished":
+            stmt = stmt.order_by(Match.kickoff.desc())
+        else:
+            stmt = stmt.order_by(Match.kickoff.asc())
+    elif upcoming:
         stmt = stmt.where(Match.kickoff >= datetime.now(tz=timezone.utc))
-    stmt = stmt.order_by(Match.kickoff.asc()).limit(limit)
+        stmt = stmt.order_by(Match.kickoff.asc())
+    else:
+        stmt = stmt.order_by(Match.kickoff.asc())
+    stmt = stmt.limit(limit)
 
     rows = db.scalars(stmt).all()
     return [
