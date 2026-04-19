@@ -51,13 +51,24 @@ SELECTION_LABELS = {
 }
 
 
-# Composite-score weights. Tuned so model probability remains dominant but
-# a strong value edge or motivation story can lift a mid-prob pick above
-# a prob-only favorite. Must sum to 1.0.
-_W_PROB = 0.40
-_W_VALUE = 0.30
-_W_MOTIVATION = 0.20
+# Composite-score weights — value-first, not probability-first.
+#
+# Earlier we weighted raw model probability at 40%, which meant any 95%-sure
+# pick with zero edge against the market (Bilyoner agreeing with us) still
+# scored high and ended up in coupons. The user's point: if we're merely
+# betting on Bilyoner's own favorite, we have no reason to expect to beat
+# Bilyoner. Edge + motivation + form are what distinguish our picks from
+# the market's picks. Probability is a floor (via min_prob), not a score driver.
+_W_PROB = 0.15
+_W_VALUE = 0.50
+_W_MOTIVATION = 0.25
 _W_FORM = 0.10
+
+# Hard edge floor: a pick is only coupon-eligible if our model's probability
+# beats the bookmaker's implied probability by at least this margin. Below
+# this we're not offering anything Bilyoner doesn't already price in.
+# Picks with no odds data at all are also rejected — we refuse to play blind.
+_MIN_VALUE_EDGE = 0.03
 
 
 @dataclass
@@ -145,11 +156,22 @@ def _base_market(market: str) -> str:
     return market
 
 
-def _value_edge(model_prob: float, book_prob: float | None) -> float:
+def _value_edge(
+    model_prob: float,
+    book_prob: float | None,
+    overround_multiplier: float = 1.0,
+) -> float:
+    """Edge vs. the fair (de-vigged) bookmaker probability.
+
+    Raw implied probability from a single decimal odds includes the book's
+    margin; comparing our model to that is unfair — we'd need to beat both
+    the market AND the vig. When `overround_multiplier` > 1 is passed, it
+    is used to deflate book_prob back to the book's "no-vig" estimate.
+    """
     if book_prob is None or book_prob <= 0:
         return 0.0
-    # Positive edge = we think the event is more likely than the book does.
-    return (model_prob / book_prob) - 1.0
+    fair_prob = book_prob / overround_multiplier
+    return (model_prob / fair_prob) - 1.0
 
 
 def _motivation_score(
@@ -243,14 +265,62 @@ def _top_motivation_reason(mot: dict[str, Any], side: str) -> str | None:
 def _form_score(
     market: str, selection: str, context: dict[str, Any] | None
 ) -> tuple[float, str | None]:
-    """Placeholder until context carries recent-form metrics.
+    """Rolling-form support for this pick, in [-1, 1].
 
-    The standings-derived intensity already proxies season-long stakes; a short
-    rolling-form signal would complement it but needs its own feature. Leaving
-    a 0 contribution keeps the composite honest — we don't fabricate a score
-    we can't back up.
+    We read the per-team form dicts attached by predict_upcoming.py (the
+    standings-derived motivation already proxies season stakes; form_delta
+    captures the current streak that DC's time-decayed strengths are too slow
+    to react to). The returned score nudges the composite up or down, and the
+    accompanying Turkish reason — only populated when the signal clearly backs
+    the selection — feeds the UI's "neden" panel.
     """
-    return 0.0, None
+    if not context:
+        return 0.0, None
+    hf = context.get("home_form") or {}
+    af = context.get("away_form") or {}
+    hd = float(hf.get("form_delta", 0.0)) if hf else 0.0
+    ad = float(af.get("form_delta", 0.0)) if af else 0.0
+
+    base = _base_market(market)
+    score = 0.0
+    reason: str | None = None
+
+    if base == "1X2":
+        if selection == "1":
+            score = max(-1.0, min(1.0, hd - ad))
+            if hd >= 0.25 and ad <= 0.0 and hf.get("reasons"):
+                reason = f"Ev: {hf['reasons'][0]}"
+        elif selection == "2":
+            score = max(-1.0, min(1.0, ad - hd))
+            if ad >= 0.25 and hd <= 0.0 and af.get("reasons"):
+                reason = f"Dep: {af['reasons'][0]}"
+        else:  # X — draw supported when both are flat
+            score = -max(abs(hd), abs(ad))
+    elif base == "double_chance":
+        if selection == "1X":
+            score = max(-1.0, min(1.0, hd - 0.5 * ad))
+        elif selection == "X2":
+            score = max(-1.0, min(1.0, ad - 0.5 * hd))
+        elif selection == "12":
+            score = max(-1.0, min(1.0, 0.5 * (abs(hd) + abs(ad))))
+    elif base == "btts":
+        # Both sides scoring more than usual → yes; either failing to score → no.
+        att = 0.5 * (hd + ad)
+        if selection == "yes":
+            score = max(-1.0, min(1.0, att))
+        else:
+            score = max(-1.0, min(1.0, -att))
+    elif base == "over_under":
+        # Over: both sides' attack delta helps. Under: both defenses tighter.
+        att = 0.5 * (hd + ad)
+        if selection == "over":
+            score = max(-1.0, min(1.0, att))
+        else:
+            score = max(-1.0, min(1.0, -att))
+    elif base == "odd_even":
+        score = 0.0  # form tells us nothing about parity
+
+    return score, reason
 
 
 # ---- pick enumeration -----------------------------------------------------
@@ -271,6 +341,43 @@ def _enumerate_picks(
     context = payload.get("context")
     out: list[Pick] = []
 
+    # Pre-compute per-market overround (book's total implied prob across all
+    # selections) so we can de-vig before scoring edge. Key: "1X2",
+    # "over_under_2.5", "btts", etc. A market only gets a real de-vig factor
+    # if odds for every selection are present; otherwise we fall back to 1.0
+    # (raw implied prob), which is conservative — we won't over-claim edge.
+    overrounds: dict[str, float] = {}
+
+    def _market_keys(market_prefix: str, selections: list[str]) -> list[tuple[str, str]]:
+        alt_prefix = market_prefix
+        if market_prefix.startswith("over_under_"):
+            alt_prefix = f"OU_{market_prefix[len('over_under_'):]}"
+        out_keys: list[tuple[str, str]] = []
+        for sel in selections:
+            out_keys.append((market_prefix, sel))
+            if alt_prefix != market_prefix:
+                out_keys.append((alt_prefix, sel))
+        return out_keys
+
+    def _overround(market_prefix: str, selections: list[str]) -> float:
+        total = 0.0
+        for sel in selections:
+            o = odds_by_key.get((market_prefix, sel))
+            if o is None and market_prefix.startswith("over_under_"):
+                o = odds_by_key.get((f"OU_{market_prefix[len('over_under_'):]}", sel))
+            if o is None or o <= 0:
+                return 1.0
+            total += 1.0 / o
+        return total if total > 0 else 1.0
+
+    overrounds["1X2"] = _overround("1X2", ["1", "X", "2"])
+    overrounds["btts"] = _overround("btts", ["yes", "no"])
+    if "over_under" in payload:
+        for line in payload["over_under"].keys():
+            overrounds[f"over_under_{line}"] = _overround(
+                f"over_under_{line}", ["over", "under"]
+            )
+
     def emit(market: str, selection: str, selection_label: str, prob: float) -> None:
         base = _base_market(market)
         if allowed_markets is not None and base not in allowed_markets:
@@ -284,7 +391,13 @@ def _enumerate_picks(
             # We try both naming conventions so we don't silently lose the edge signal.
             book_odds = odds_by_key.get((market.replace("over_under_", "OU_"), selection))
         book_prob = (1.0 / book_odds) if book_odds else None
-        edge = _value_edge(prob, book_prob)
+        overround = overrounds.get(market, 1.0)
+        edge = _value_edge(prob, book_prob, overround_multiplier=overround)
+
+        # Strategy gate: require a positive edge against the market. If we
+        # have no odds at all, skip — we won't play picks we can't compare.
+        if book_odds is None or edge < _MIN_VALUE_EDGE:
+            return
 
         mot_score, mot_reason = _motivation_score(market, selection, context)
         form_score, form_reason = _form_score(market, selection, context)
@@ -462,6 +575,8 @@ def suggest_coupons(
     *,
     min_prob_per_leg: float = 0.55,
     num_legs: int = 3,
+    min_legs: int = 1,
+    max_legs: int = 4,
     allowed_markets: set[str] | None = None,
     max_coupons: int = 5,
     min_combined_odds: float = 1.6,
@@ -503,21 +618,31 @@ def suggest_coupons(
     # because every match's highest-composite pick is always "0.5 Üst".
     all_picks.sort(key=lambda p: p.composite, reverse=True)
 
+    # Try legs from max down to min — we'd rather offer one high-conviction
+    # single pick than refuse to suggest anything when diversity/odds don't
+    # support a 3-legger. Each size is attempted until we've produced
+    # `max_coupons` total or the pick pool is exhausted.
     coupons: list[Coupon] = []
     excluded: set[int] = set()
-    for _ in range(max_coupons):
-        c = _compose_coupon(
-            all_picks,
-            num_legs=num_legs,
-            min_combined_odds=min_combined_odds,
-            enforce_market_diversity=enforce_market_diversity,
-            excluded_match_ids=excluded,
-        )
-        if c is None:
+    leg_sizes = list(range(min(num_legs, max_legs), max(min_legs, 1) - 1, -1))
+    for legs_target in leg_sizes:
+        while len(coupons) < max_coupons:
+            c = _compose_coupon(
+                all_picks,
+                num_legs=legs_target,
+                min_combined_odds=min_combined_odds,
+                enforce_market_diversity=enforce_market_diversity,
+                excluded_match_ids=excluded,
+            )
+            if c is None:
+                break
+            if c.combined_odds < min_combined_odds:
+                break
+            coupons.append(c)
+            for leg in c.legs:
+                excluded.add(leg.match_id)
+        if len(coupons) >= max_coupons:
             break
-        coupons.append(c)
-        for leg in c.legs:
-            excluded.add(leg.match_id)
 
     primary = coupons[0] if coupons else None
     alternatives = coupons[1:]

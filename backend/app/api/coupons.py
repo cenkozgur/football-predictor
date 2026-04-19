@@ -39,7 +39,14 @@ ALLOWED_MARKET_SET = {
 @router.get("")
 def list_coupon_suggestions(
     min_prob: float = Query(default=0.55, ge=0.01, le=0.99),
-    legs: int = Query(default=3, ge=1, le=6),
+    legs: int = Query(
+        default=3,
+        ge=1,
+        le=6,
+        description="Preferred leg count. If not enough edge-positive picks exist, composer falls back to smaller coupons down to min_legs.",
+    ),
+    min_legs: int = Query(default=1, ge=1, le=6),
+    max_legs: int = Query(default=4, ge=1, le=6),
     markets: str | None = Query(
         default=None,
         description="Comma-separated market filter, e.g. '1X2,btts'. Default: all main markets.",
@@ -135,6 +142,8 @@ def list_coupon_suggestions(
         match_predictions,
         min_prob_per_leg=min_prob,
         num_legs=legs,
+        min_legs=min_legs,
+        max_legs=max_legs,
         allowed_markets=allowed,
         min_combined_odds=min_combined_odds,
         enforce_market_diversity=diversify_markets,

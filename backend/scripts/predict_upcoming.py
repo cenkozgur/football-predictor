@@ -50,6 +50,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db import SessionLocal
 from app.features.adjust import adjust_rates, score_matrix_from_rates
+from app.features.form import compute_team_form
 from app.features.motivation import compute_team_motivation
 from app.features.standings import build_standings
 from app.ml.dixon_coles import DixonColesModel
@@ -95,6 +96,31 @@ def _mot_to_json(m):
         "dead_rubber": round(m.dead_rubber, 3),
         "intensity": round(m.intensity, 3),
         "reasons": m.reasons,
+    }
+
+
+def _form_to_json(f):
+    if f is None:
+        return None
+    return {
+        "team": f.team_name,
+        "games": f.games,
+        "wins": f.wins,
+        "draws": f.draws,
+        "losses": f.losses,
+        "goals_for": f.goals_for,
+        "goals_against": f.goals_against,
+        "win_rate": round(f.win_rate, 3),
+        "clean_sheet_rate": round(f.clean_sheet_rate, 3),
+        "fail_to_score_rate": round(f.fail_to_score_rate, 3),
+        "gf_per_game": round(f.gf_per_game, 2),
+        "ga_per_game": round(f.ga_per_game, 2),
+        "home_gf_per_game": round(f.home_gf_per_game, 2),
+        "home_ga_per_game": round(f.home_ga_per_game, 2),
+        "away_gf_per_game": round(f.away_gf_per_game, 2),
+        "away_ga_per_game": round(f.away_ga_per_game, 2),
+        "form_delta": round(f.form_delta, 3),
+        "reasons": f.reasons,
     }
 
 
@@ -240,6 +266,13 @@ def run(
             away_mot = compute_team_motivation(standings, m.away_team_id)
             adj = adjust_rates(base_lam, base_mu, home_mot, away_mot)
 
+            home_form = compute_team_form(
+                db, m.home_team_id, home_name, m.league, m.season, m.kickoff
+            )
+            away_form = compute_team_form(
+                db, m.away_team_id, away_name, m.league, m.season, m.kickoff
+            )
+
             matrix = score_matrix_from_rates(adj.lam, adj.mu, model.rho)
             payload = build_full_payload(matrix)
             # Attach context block so the UI can render the "neden" panel.
@@ -249,6 +282,8 @@ def run(
                 "multipliers": {"home": adj.home_multiplier, "away": adj.away_multiplier},
                 "home_motivation": _mot_to_json(home_mot),
                 "away_motivation": _mot_to_json(away_mot),
+                "home_form": _form_to_json(home_form),
+                "away_form": _form_to_json(away_form),
                 "reasons": adj.reasons,
             }
 
