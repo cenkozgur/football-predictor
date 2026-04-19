@@ -29,11 +29,11 @@ from typing import Any
 
 # Human-readable market labels (Turkish) used in the response.
 MARKET_LABELS = {
-    "1X2": "Mac Sonucu",
-    "double_chance": "Cifte Sans",
-    "over_under": "Alt/Ust",
+    "1X2": "Maç Sonucu",
+    "double_chance": "Çifte Şans",
+    "over_under": "Alt/Üst",
     "btts": "KG Var/Yok",
-    "odd_even": "Tek/Cift",
+    "odd_even": "Tek/Çift",
     "correct_score": "Kesin Skor",
 }
 
@@ -47,7 +47,9 @@ SELECTION_LABELS = {
     "yes": "Var",
     "no": "Yok",
     "odd": "Tek",
-    "even": "Cift",
+    "even": "Çift",
+    "over": "Üst",
+    "under": "Alt",
 }
 
 
@@ -157,11 +159,25 @@ def _best_pick_for_match(
         for sel, p in payload["double_chance"].items():
             add("double_chance", sel, float(p))
 
-    # Over/Under (all lines)
+    # Over/Under (all lines). Override the generic Üst/Alt label with the
+    # specific line so "0.5 Üst" is visually distinct from "2.5 Üst".
     if "over_under" in payload:
         for line, ou in payload["over_under"].items():
             for sel, p in ou.items():
-                add(f"over_under_{line}", sel, float(p))
+                pick = Pick(
+                    match_id=match_id,
+                    home_team=home,
+                    away_team=away,
+                    kickoff=kickoff,
+                    league=league,
+                    market=f"over_under_{line}",
+                    market_label=MARKET_LABELS["over_under"],
+                    selection=sel,
+                    selection_label=f"{line} {SELECTION_LABELS.get(sel, sel)}",
+                    prob=float(p),
+                )
+                if allowed_markets is None or "over_under" in allowed_markets:
+                    candidates.append(pick)
 
     # BTTS
     if "btts" in payload:

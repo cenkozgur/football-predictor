@@ -9,7 +9,7 @@ latest prediction per upcoming match from the DB and passes everything through.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
@@ -44,11 +44,18 @@ def list_coupon_suggestions(
         description="Comma-separated market filter, e.g. '1X2,btts'. Default: all main markets.",
     ),
     limit_matches: int = Query(default=200, ge=1, le=500),
+    days_ahead: int = Query(
+        default=2,
+        ge=1,
+        le=14,
+        description="Only consider matches kicking off within this many days. Defaults to 2 so coupons reflect today/tomorrow, not fixtures two weeks out.",
+    ),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """Return coupon suggestions for upcoming matches with predictions."""
 
     now_naive = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+    horizon = now_naive + timedelta(days=days_ahead)
 
     # Join: upcoming matches that have a prediction (latest per match)
     stmt = (
@@ -57,6 +64,7 @@ def list_coupon_suggestions(
         .options(joinedload(Match.home_team), joinedload(Match.away_team))
         .where(Match.status == "scheduled")
         .where(Match.kickoff > now_naive)
+        .where(Match.kickoff <= horizon)
         .order_by(Match.kickoff.asc())
         .limit(limit_matches)
     )
