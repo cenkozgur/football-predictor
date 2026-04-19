@@ -29,13 +29,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
 
+      - name: Migrate — add xg columns if missing
+        # Must run before any ORM query because Match.xg_home/xg_away are
+        # now part of the mapped schema. SELECT would fail on an old DB.
+        run: python scripts/migrate_add_xg.py
+
       - name: Ingest fixtures (next 14 days)
         env:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
-
-      - name: Migrate — add xg columns if missing
-        run: python scripts/migrate_add_xg.py
 
       - name: Ingest Understat xG (top-5 leagues)
         # GitHub runners are US-based so Understat is not Turkey-blocked here.
