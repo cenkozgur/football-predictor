@@ -34,6 +34,11 @@ jobs:
         # now part of the mapped schema. SELECT would fail on an old DB.
         run: python scripts/migrate_add_xg.py
 
+      - name: Migrate — normalize season labels
+        # Collapses "2019/2020" / "2025" / "2425" into a single YYMM format
+        # per league, so motivation/standings group correctly. Idempotent.
+        run: python scripts/migrate_normalize_seasons.py
+
       - name: Ingest fixtures (next 14 days)
         env:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}

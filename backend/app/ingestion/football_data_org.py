@@ -213,6 +213,25 @@ TEAM_ALIASES: dict[str, str] = {
 }
 
 
+def _season_code(season_obj: dict[str, Any]) -> str:
+    """Convert a football-data.org season dict to football-data.co.uk's YYYY
+    short code (e.g. start=2024-08-01 → "2425").
+
+    Rationale: all our historical results from football-data.co.uk use that
+    code, so upcoming fixtures from this API need to match or we'll
+    accidentally create two season buckets for the same real-world season
+    and starve the standings/motivation logic.
+    """
+    start = str(season_obj.get("startDate", "") or "")
+    if len(start) < 4:
+        return ""
+    try:
+        y = int(start[:4])
+    except ValueError:
+        return ""
+    return f"{y % 100:02d}{(y + 1) % 100:02d}"
+
+
 def _client(api_key: str) -> httpx.Client:
     return httpx.Client(
         base_url=API_BASE,
@@ -295,9 +314,11 @@ def fetch_fixtures(
             print(f"  [{code}={api_code}] fixtures {date_from}..{date_to}: {len(rows)}")
             for row in rows:
                 row["_our_league_code"] = code
-                row["_our_season"] = str(
-                    row.get("season", {}).get("startDate", "")[:4] or ""
-                )
+                # Harmonize season labels with football-data.co.uk's CSV style
+                # (e.g. "2425" = 2024/25). That source already populates most
+                # of our historical `matches` rows, so matching its format
+                # keeps one team's results inside a single season bucket.
+                row["_our_season"] = _season_code(row.get("season", {}))
                 fixtures.append(row)
             time.sleep(6.5)  # free tier: 10 req/min
     return fixtures
