@@ -44,6 +44,14 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
 
+      - name: Ingest Big-5 current-season CSV (finished matches + odds)
+        # football-data.co.uk publishes a per-league CSV that updates weekly
+        # with new results. This is what feeds the standings → motivation chain.
+        run: |
+          for lg in E0 D1 I1 SP1 F1; do
+            python -m app.ingestion.football_data --league $lg --season 2526
+          done
+
       - name: Ingest Understat xG (top-5 leagues)
         # GitHub runners are US-based so Understat is not Turkey-blocked here.
         # Seasons 2023 and 2024 are historical backfill (cheap idempotent
