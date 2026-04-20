@@ -77,6 +77,10 @@ jobs:
           sqlite3 football.db "PRAGMA wal_checkpoint(TRUNCATE);"
 
       - name: Commit updated DB
+        # Race-resilient: if main moved between our checkout and our push (e.g.
+        # because a manual dispatch ran concurrently), rebase the binary DB
+        # onto the new tip with `--ours`, then push again. Without this the
+        # job exits 1 on a rejected push and the day's data is lost.
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -85,5 +89,12 @@ jobs:
             echo "No DB changes."
           else
             git commit -m "data: daily fixtures refresh $(date -u +%Y-%m-%d)"
-            git push
+            for i in 1 2 3; do
+              if git push; then
+                echo "Push succeeded on attempt $i."
+                break
+              fi
+              echo "Push rejected on attempt $i, rebasing onto origin/main..."
+              git pull --rebase -X ours --autostash
+            done
           fi
