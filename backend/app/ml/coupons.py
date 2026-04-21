@@ -336,6 +336,7 @@ def _enumerate_picks(
     odds_by_key: dict[tuple[str, str], float],
     allowed_markets: set[str] | None,
     min_prob: float,
+    require_edge: bool = True,
 ) -> list[Pick]:
     """Generate every candidate Pick for one match, across all markets."""
     context = payload.get("context")
@@ -396,7 +397,12 @@ def _enumerate_picks(
 
         # Strategy gate: require a positive edge against the market. If we
         # have no odds at all, skip — we won't play picks we can't compare.
-        if book_odds is None or edge < _MIN_VALUE_EDGE:
+        # `require_edge=False` is the fallback pass: still needs odds (we refuse
+        # to play blind), but accepts zero/negative edge so boş-slate günlerde
+        # track record için tek bacaklı bir pick üretebiliyoruz.
+        if book_odds is None:
+            return
+        if require_edge and edge < _MIN_VALUE_EDGE:
             return
 
         mot_score, mot_reason = _motivation_score(market, selection, context)
@@ -646,6 +652,38 @@ def suggest_coupons(
 
     primary = coupons[0] if coupons else None
     alternatives = coupons[1:]
+    is_fallback = False
+
+    # Fallback: edge gate hiçbir pick'i geçiremediyse (tipik ince slate
+    # günlerinde — Pazartesi/Salı) track record birikmesi için en yüksek
+    # composite'li tek bacağı sun. Açıkça etiketli (is_fallback=True) ki UI
+    # "bugün güçlü bir value görmedik" mesajını gösterebilsin.
+    if primary is None:
+        fallback_picks: list[Pick] = []
+        for m in match_predictions:
+            fallback_picks.extend(
+                _enumerate_picks(
+                    match_id=m["match_id"],
+                    home=m["home_team"],
+                    away=m["away_team"],
+                    kickoff=m["kickoff"],
+                    league=m["league"],
+                    payload=m["payload"],
+                    odds_by_key=odds_by_match.get(m["match_id"], {}),
+                    allowed_markets=allowed_markets,
+                    min_prob=min_prob_per_leg,
+                    require_edge=False,
+                )
+            )
+        if fallback_picks:
+            fallback_picks.sort(key=lambda p: p.composite, reverse=True)
+            top = fallback_picks[0]
+            top.reasons.insert(
+                0,
+                "Bugün yüksek value bulamadık — model'in en güvendiği tekli seçim",
+            )
+            primary = Coupon(legs=[top])
+            is_fallback = True
 
     # Bankos (single-leg "sure" picks): use the best-composite pick per match,
     # ranked; this is a different view from the coupon composer.
@@ -653,8 +691,12 @@ def suggest_coupons(
     best_per_match.sort(key=lambda p: p.composite, reverse=True)
     bankos = [Coupon(legs=[p]) for p in best_per_match[:5]]
 
+    primary_dict = primary.to_dict() if primary else None
+    if primary_dict is not None:
+        primary_dict["is_fallback"] = is_fallback
+
     return {
-        "primary": primary.to_dict() if primary else None,
+        "primary": primary_dict,
         "alternatives": [c.to_dict() for c in alternatives],
         "bankos": [c.to_dict() for c in bankos],
         "all_picks": [p.to_dict() for p in best_per_match],

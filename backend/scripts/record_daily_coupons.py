@@ -170,7 +170,8 @@ def run(horizon_days: int = 2) -> int:
 
         inserted = 0
         if result.get("primary"):
-            if _save_coupon(db, today, result["primary"], kind="primary"):
+            primary_kind = "fallback" if result["primary"].get("is_fallback") else "primary"
+            if _save_coupon(db, today, result["primary"], kind=primary_kind):
                 inserted += 1
         for alt in result.get("alternatives", []):
             if _save_coupon(db, today, alt, kind="alternative"):
