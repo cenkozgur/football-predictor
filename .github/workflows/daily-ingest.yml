@@ -2,8 +2,10 @@ name: Daily Fixtures Ingest
 
 on:
   schedule:
-    # 06:00 UTC = 09:00 Istanbul
-    - cron: "0 6 * * *"
+    # 05:23 UTC ≈ 08:23 Istanbul. Off-the-hour on purpose: GitHub's
+    # shared cron queue is heaviest at :00, so "0 6" runs get delayed
+    # or dropped. An odd minute materially improves fire reliability.
+    - cron: "23 5 * * *"
   workflow_dispatch: {}
 
 permissions:
