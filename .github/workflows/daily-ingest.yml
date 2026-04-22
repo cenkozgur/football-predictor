@@ -47,6 +47,11 @@ jobs:
         # schema matches whatever SELECT we run against Match.
         run: python scripts/migrate_add_live_cols.py
 
+      - name: Migrate — ensure team_availability table exists
+        # Pre-creates the table so fetch_availability (below) can write even
+        # before main.py's create_all has run on this DB snapshot.
+        run: python scripts/migrate_add_availability.py
+
       - name: Ingest fixtures (next 14 days)
         env:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
@@ -65,6 +70,14 @@ jobs:
         # Seasons 2023 and 2024 are historical backfill (cheap idempotent
         # updates); 2025 is the live season.
         run: python -m app.ingestion.understat --seasons 2023,2024,2025
+
+      - name: Fetch team availability (injuries / suspensions)
+        # api-football /injuries — no-op if FOOTBALL_API_KEY isn't set, so
+        # this can ship before the subscription arrives. When set, populates
+        # team_availability which the composer reads via _availability_score.
+        env:
+          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m scripts.fetch_availability --days-ahead 3
 
       - name: Generate predictions for upcoming matches
         run: python scripts/predict_upcoming.py
