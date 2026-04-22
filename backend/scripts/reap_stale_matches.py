@@ -58,19 +58,36 @@ def _loose_resolve_team(
     The daily fixture ingester uses 0.88 cutoff because a bad match there
     writes a wrong row permanently. The reaper only *updates* status +
     scores on rows we already have; a misassigned settlement is still
-    bounded to one match's score, not a new inserted team. So we widen
-    the net so FIN/IRL/NOR spellings that differ cosmetically from our DB
-    can still settle.
+    bounded to one match's score, not a new inserted team. So we:
+        1. alias-resolve,
+        2. try exact normalized match,
+        3. substring either way so 'tps' ~ 'tps turku' and
+           'sjk seinajoki' ~ 'sjk' both settle (the common Nordic-league
+           naming mismatch — our DB stores abbreviations, api-football
+           spells them out with city),
+        4. fall through to fuzzy as a last resort.
     """
     if name in AF_TEAM_ALIASES:
         norm = _af_normalize(AF_TEAM_ALIASES[name])
         if norm in team_index:
             return team_index[norm]
     norm = _af_normalize(name)
+    if not norm:
+        return None
     if norm in team_index:
         return team_index[norm]
     if name in fuzzy_cache:
         return fuzzy_cache[name]
+
+    # Substring pass: require at least 3 characters so a 1-2 letter DB name
+    # doesn't accidentally match everything. Within a single league this is
+    # safe — two teams don't usually contain each other's full names.
+    if len(norm) >= 3:
+        for key, team in team_index.items():
+            if len(key) >= 3 and (key in norm or norm in key):
+                fuzzy_cache[name] = team
+                return team
+
     keys = list(team_index.keys())
     close = get_close_matches(norm, keys, n=1, cutoff=cutoff)
     team = team_index[close[0]] if close else None
