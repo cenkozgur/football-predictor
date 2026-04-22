@@ -35,13 +35,47 @@ from sqlalchemy.orm import joinedload
 
 from app.db import SessionLocal
 from app.ingestion.football_data_org import LEAGUE_MAP as FDO_LEAGUE_MAP, TEAM_ALIASES
+from difflib import get_close_matches
+
 from app.ingestion.api_football import (
     LEAGUE_MAP as AF_LEAGUE_MAP,
+    TEAM_ALIASES as AF_TEAM_ALIASES,
     _build_team_index,
-    _resolve_team,
+    _normalize as _af_normalize,
 )
 from app.models.match import Match
 from app.models.team import Team
+
+
+def _loose_resolve_team(
+    name: str,
+    team_index: dict[str, Team],
+    fuzzy_cache: dict[str, Team | None],
+    cutoff: float = 0.72,
+) -> Team | None:
+    """Looser variant of api_football._resolve_team for the reaper's use.
+
+    The daily fixture ingester uses 0.88 cutoff because a bad match there
+    writes a wrong row permanently. The reaper only *updates* status +
+    scores on rows we already have; a misassigned settlement is still
+    bounded to one match's score, not a new inserted team. So we widen
+    the net so FIN/IRL/NOR spellings that differ cosmetically from our DB
+    can still settle.
+    """
+    if name in AF_TEAM_ALIASES:
+        norm = _af_normalize(AF_TEAM_ALIASES[name])
+        if norm in team_index:
+            return team_index[norm]
+    norm = _af_normalize(name)
+    if norm in team_index:
+        return team_index[norm]
+    if name in fuzzy_cache:
+        return fuzzy_cache[name]
+    keys = list(team_index.keys())
+    close = get_close_matches(norm, keys, n=1, cutoff=cutoff)
+    team = team_index[close[0]] if close else None
+    fuzzy_cache[name] = team
+    return team
 
 
 API_BASE = "https://api.football-data.org/v4"
@@ -86,6 +120,28 @@ def _fetch_finished_for_league(
     return r.json().get("matches", [])
 
 
+def _names_match(api_name: str, db_name: str) -> bool:
+    """Match two team spellings leniently — alias-resolve + normalized compare.
+
+    Tighter than the api-football fuzzy path because here we already have the
+    DB-side team name to compare against directly; we don't need to scan the
+    whole team index. Handles cases like 'Manchester United FC' vs
+    'Man United' and 'Borussia Dortmund' vs 'Dortmund'.
+    """
+    if api_name == db_name:
+        return True
+    aliased = TEAM_ALIASES.get(api_name, api_name)
+    if aliased == db_name:
+        return True
+    # Last resort: normalized + substring either way so 'Dortmund' ~ 'BVB
+    # Dortmund' still matches. Cheap and bounded in blast radius.
+    n_api = _af_normalize(aliased)
+    n_db = _af_normalize(db_name)
+    if not n_api or not n_db:
+        return False
+    return n_api == n_db or n_api in n_db or n_db in n_api
+
+
 def _find_provider_match(
     provider_rows: list[dict[str, Any]], home_name: str, away_name: str, kickoff: datetime
 ) -> dict[str, Any] | None:
@@ -95,12 +151,8 @@ def _find_provider_match(
         api_away = (row.get("awayTeam") or {}).get("name")
         if not (api_home and api_away):
             continue
-        # Alias-resolve so 'Manchester United FC' → 'Man United'
-        aliased_home = TEAM_ALIASES.get(api_home, api_home)
-        aliased_away = TEAM_ALIASES.get(api_away, api_away)
-        if aliased_home != home_name or aliased_away != away_name:
-            if api_home != home_name or api_away != away_name:
-                continue
+        if not (_names_match(api_home, home_name) and _names_match(api_away, away_name)):
+            continue
         utc_str = row.get("utcDate")
         try:
             api_kickoff = datetime.fromisoformat(utc_str.replace("Z", "+00:00"))
@@ -159,10 +211,10 @@ def _reap_via_api_football(
                 for row in rows:
                     home_row = (row.get("teams") or {}).get("home") or {}
                     away_row = (row.get("teams") or {}).get("away") or {}
-                    resolved_home = _resolve_team(
+                    resolved_home = _loose_resolve_team(
                         home_row.get("name", ""), team_index, fuzzy_cache
                     )
-                    resolved_away = _resolve_team(
+                    resolved_away = _loose_resolve_team(
                         away_row.get("name", ""), team_index, fuzzy_cache
                     )
                     if resolved_home is None or resolved_away is None:
