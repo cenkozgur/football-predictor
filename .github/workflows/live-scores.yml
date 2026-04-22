@@ -1,0 +1,77 @@
+name: Live Scores
+
+# Polls football-data.org for in-play matches and updates our DB so the
+# "Devam Eden" tab shows real-time scores + match minutes. Runs every 5
+# minutes during European match hours (roughly 10:00–23:00 UTC) to stay
+# well under free-tier rate limits (10 req/min; this uses 1 req/run).
+on:
+  schedule:
+    - cron: "*/5 10-23 * * *"
+  workflow_dispatch: {}
+
+# Prevent overlapping runs — if a poll takes longer than 5 min we'd rather
+# skip the next than double up.
+concurrency:
+  group: live-scores
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: "sqlite:///./football.db"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Migrate — add live score columns if missing
+        # Idempotent; same migration as daily-ingest. Needed here because the
+        # live-scores workflow may have been the first to run after a fresh
+        # checkout of a DB that didn't yet have these columns.
+        run: python scripts/migrate_add_live_cols.py
+
+      - name: Poll live scores
+        env:
+          FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
+        run: python -m scripts.fetch_live_scores
+
+      - name: Checkpoint SQLite WAL
+        run: |
+          sudo apt-get install -y sqlite3
+          sqlite3 football.db "PRAGMA wal_checkpoint(TRUNCATE);"
+
+      - name: Commit updated DB
+        # Same race-resilient push the daily-ingest uses: binary DB conflicts
+        # from concurrent manual dispatches are resolved with `--ours` so the
+        # most recent live-poll state always wins.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f football.db
+          if git diff --cached --quiet; then
+            echo "No live-score changes."
+          else
+            git commit -m "data: live scores $(date -u +%Y-%m-%dT%H:%MZ)"
+            for i in 1 2 3; do
+              if git push; then
+                echo "Push succeeded on attempt $i."
+                break
+              fi
+              echo "Push rejected on attempt $i, rebasing onto origin/main..."
+              git pull --rebase -X ours --autostash
+            done
+          fi

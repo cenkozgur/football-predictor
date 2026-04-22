@@ -35,5 +35,12 @@ class Match(Base):
     xg_home: Mapped[float | None] = mapped_column(Float, nullable=True)
     xg_away: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    # Live (in-play) tracking — populated only while status in
+    # ('in_play', 'paused') and cleared when the match finishes. `live_minute`
+    # is the match clock (0-120+), not wall-clock time.
+    live_minute: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    live_home: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    live_away: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     home_team: Mapped[Team] = relationship(foreign_keys=[home_team_id])
     away_team: Mapped[Team] = relationship(foreign_keys=[away_team_id])

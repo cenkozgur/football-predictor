@@ -41,6 +41,12 @@ jobs:
         # per league, so motivation/standings group correctly. Idempotent.
         run: python scripts/migrate_normalize_seasons.py
 
+      - name: Migrate — add live score columns if missing
+        # live_minute/live_home/live_away are populated by the separate
+        # live-scores workflow; adding them here ensures the ORM's mapped
+        # schema matches whatever SELECT we run against Match.
+        run: python scripts/migrate_add_live_cols.py
+
       - name: Ingest fixtures (next 14 days)
         env:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
