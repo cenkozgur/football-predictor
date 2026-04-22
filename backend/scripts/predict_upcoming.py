@@ -124,6 +124,35 @@ def _form_to_json(f):
     }
 
 
+def _availability_to_json(row):
+    """TeamAvailability → the shape the composer reads off payload.context."""
+    if row is None:
+        return None
+    return {
+        "absent_count": row.absent_count,
+        "key_absent_count": row.key_absent_count,
+        "key_absences": row.key_absences or [],
+    }
+
+
+def _load_availability(db, match_ids: list[int]) -> dict[tuple[int, int], object]:
+    """Return {(match_id, team_id): TeamAvailability} for a batch of matches.
+
+    One query instead of N; the composer-facing attach loop below just looks up
+    home and away in the dict. Missing (match, team) pairs return None, which
+    is indistinguishable from "no reported absences" at the composer level.
+    """
+    from app.models.team_availability import TeamAvailability
+    from sqlalchemy import select
+
+    if not match_ids:
+        return {}
+    rows = db.scalars(
+        select(TeamAvailability).where(TeamAvailability.match_id.in_(match_ids))
+    ).all()
+    return {(r.match_id, r.team_id): r for r in rows}
+
+
 def _days_ago(kickoff: datetime, now: datetime) -> int:
     """SQLite stores tz-aware datetimes as naive UTC, so normalize both sides."""
     if kickoff.tzinfo is None:
@@ -243,6 +272,10 @@ def run(
         written = 0
         skipped_unknown_team = 0
 
+        # Batch-load availability for every target so the inner loop is just a
+        # dict lookup — one query rather than 2×N (one per side per match).
+        availability_by_key = _load_availability(db, [m.id for m in targets])
+
         for m in targets:
             home_name = m.home_team.name
             away_name = m.away_team.name
@@ -275,6 +308,10 @@ def run(
 
             matrix = score_matrix_from_rates(adj.lam, adj.mu, model.rho)
             payload = build_full_payload(matrix)
+
+            home_avail = availability_by_key.get((m.id, m.home_team_id))
+            away_avail = availability_by_key.get((m.id, m.away_team_id))
+
             # Attach context block so the UI can render the "neden" panel.
             payload["context"] = {
                 "base_lambda": {"home": adj.base_lambda, "away": adj.base_mu},
@@ -284,6 +321,8 @@ def run(
                 "away_motivation": _mot_to_json(away_mot),
                 "home_form": _form_to_json(home_form),
                 "away_form": _form_to_json(away_form),
+                "home_availability": _availability_to_json(home_avail),
+                "away_availability": _availability_to_json(away_avail),
                 "reasons": adj.reasons,
             }
 

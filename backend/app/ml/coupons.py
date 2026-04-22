@@ -59,10 +59,16 @@ SELECTION_LABELS = {
 # betting on Bilyoner's own favorite, we have no reason to expect to beat
 # Bilyoner. Edge + motivation + form are what distinguish our picks from
 # the market's picks. Probability is a floor (via min_prob), not a score driver.
+#
+# Availability is smaller than motivation because it's a secondary signal:
+# the market already prices in announced lineups. We use it mostly for the
+# direction (a team losing its striker shouldn't be a 1X pick) and for a
+# user-visible reason, not as a primary discriminator.
 _W_PROB = 0.15
-_W_VALUE = 0.50
-_W_MOTIVATION = 0.25
+_W_VALUE = 0.45
+_W_MOTIVATION = 0.20
 _W_FORM = 0.10
+_W_AVAILABILITY = 0.10
 
 # Hard edge floor: a pick is only coupon-eligible if our model's probability
 # beats the bookmaker's implied probability by at least this margin. Below
@@ -90,7 +96,8 @@ class Pick:
     value_edge: float        # (model_prob / book_prob) - 1; 0 if unknown
     motivation_score: float  # -1..1; positive = motivation supports the pick
     form_score: float        # -1..1; positive = recent form supports the pick
-    composite: float         # weighted blend in [0, 1]
+    availability_score: float = 0.0  # -1..1; positive = roster advantage
+    composite: float = 0.0   # weighted blend in [0, 1]
     reasons: list[str] = field(default_factory=list)  # Turkish, UI-facing
 
     def to_dict(self) -> dict[str, Any]:
@@ -110,6 +117,7 @@ class Pick:
             "value_edge": self.value_edge,
             "motivation_score": self.motivation_score,
             "form_score": self.form_score,
+            "availability_score": self.availability_score,
             "composite": self.composite,
             "reasons": self.reasons,
         }
@@ -323,6 +331,88 @@ def _form_score(
     return score, reason
 
 
+# Positions we treat as "decisive": losing one of these is a stronger signal
+# than losing a 12th-15th midfield rotator. api-football position strings are
+# free-form so we match by substring rather than exact equality.
+_KEY_POSITION_PREFIXES = ("goalkeeper", "forward", "attacker")
+
+
+def _availability_score(
+    market: str, selection: str, context: dict[str, Any] | None
+) -> tuple[float, str | None]:
+    """Roster-availability signal, in [-1, 1].
+
+    Reads `home_availability` / `away_availability` attached by
+    predict_upcoming. Positive score = the picked side has a lineup advantage
+    (opponent missing key players or has more absences). Produces a Turkish
+    reason when a forward or goalkeeper is out, since those are the ones the
+    model most under-weights.
+    """
+    if not context:
+        return 0.0, None
+    home = context.get("home_availability") or {}
+    away = context.get("away_availability") or {}
+
+    home_absent = int(home.get("key_absent_count", 0) or 0)
+    away_absent = int(away.get("key_absent_count", 0) or 0)
+
+    def _has_key_position(row: dict[str, Any]) -> str | None:
+        for a in row.get("key_absences") or []:
+            pos = (a.get("position") or "").lower()
+            if any(pos.startswith(p) for p in _KEY_POSITION_PREFIXES):
+                return a.get("name") or a.get("position")
+        return None
+
+    home_key = _has_key_position(home)
+    away_key = _has_key_position(away)
+
+    # Normalize absent counts into [-1, 1] differential. 3 absences is already
+    # a notable disruption; we clip there rather than scale linearly to ∞.
+    diff = max(-3, min(3, away_absent - home_absent)) / 3.0
+
+    base = _base_market(market)
+    score = 0.0
+    reason: str | None = None
+
+    if base == "1X2":
+        if selection == "1":
+            score = diff  # away missing > home missing → favors home
+            if away_key and away_absent >= 2:
+                reason = f"Deplasmanda {away_key} yok"
+        elif selection == "2":
+            score = -diff
+            if home_key and home_absent >= 2:
+                reason = f"Ev sahibinde {home_key} yok"
+        else:  # X — draws are modestly supported when both sides are shorthanded
+            score = -abs(diff) * 0.5
+    elif base == "double_chance":
+        if selection == "1X":
+            score = max(-1.0, min(1.0, diff * 0.7))
+        elif selection == "X2":
+            score = max(-1.0, min(1.0, -diff * 0.7))
+        elif selection == "12":
+            # Either side winning is easier when the other is weakened, so the
+            # *magnitude* of asymmetry helps; we don't care about direction.
+            score = min(1.0, abs(diff) * 0.5)
+    elif base == "btts":
+        # Lose a GK → more goals expected. Lose a striker → fewer.
+        # Without position detail we'd be guessing; use key_absent_count as a
+        # crude signal: heavy absences on either side depress btts_yes.
+        heavy = max(home_absent, away_absent) >= 3
+        if selection == "yes":
+            score = -0.5 if heavy else 0.0
+        else:
+            score = 0.5 if heavy else 0.0
+    elif base == "over_under":
+        heavy = max(home_absent, away_absent) >= 3
+        if selection == "over":
+            score = -0.5 if heavy else 0.0
+        else:
+            score = 0.5 if heavy else 0.0
+
+    return score, reason
+
+
 # ---- pick enumeration -----------------------------------------------------
 
 def _enumerate_picks(
@@ -407,6 +497,7 @@ def _enumerate_picks(
 
         mot_score, mot_reason = _motivation_score(market, selection, context)
         form_score, form_reason = _form_score(market, selection, context)
+        avail_score, avail_reason = _availability_score(market, selection, context)
 
         # Composite in [0, 1]. Edge is unbounded in principle so clamp its
         # contribution to keep a single big edge from swamping everything else.
@@ -416,6 +507,7 @@ def _enumerate_picks(
             + _W_VALUE * (0.5 + 0.5 * clamped_edge)
             + _W_MOTIVATION * (0.5 + 0.5 * mot_score)
             + _W_FORM * (0.5 + 0.5 * form_score)
+            + _W_AVAILABILITY * (0.5 + 0.5 * avail_score)
         )
 
         reasons: list[str] = []
@@ -436,6 +528,8 @@ def _enumerate_picks(
             reasons.append(mot_reason)
         if form_reason:
             reasons.append(form_reason)
+        if avail_reason:
+            reasons.append(avail_reason)
 
         out.append(
             Pick(
@@ -454,6 +548,7 @@ def _enumerate_picks(
                 value_edge=edge,
                 motivation_score=mot_score,
                 form_score=form_score,
+                availability_score=avail_score,
                 composite=composite,
                 reasons=reasons,
             )
@@ -711,6 +806,7 @@ def suggest_coupons(
                 "value": _W_VALUE,
                 "motivation": _W_MOTIVATION,
                 "form": _W_FORM,
+                "availability": _W_AVAILABILITY,
             },
         },
     }
