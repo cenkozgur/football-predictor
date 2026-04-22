@@ -65,11 +65,14 @@ jobs:
             python -m app.ingestion.football_data --league $lg --season 2526
           done
 
-      - name: Ingest Understat xG (top-5 leagues)
-        # GitHub runners are US-based so Understat is not Turkey-blocked here.
-        # Seasons 2023 and 2024 are historical backfill (cheap idempotent
-        # updates); 2025 is the live season.
-        run: python -m app.ingestion.understat --seasons 2023,2024,2025
+      - name: Backfill xG from api-football (last 7 days)
+        # Replaces the Understat scraper which is now blocked from every cloud
+        # IP we can reach. api-football /fixtures/statistics returns
+        # expected_goals per fixture for the top-5 + Eredivisie + Primeira.
+        # No-op if FOOTBALL_API_KEY isn't set, so this can ship regardless.
+        env:
+          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m scripts.fetch_xg_api_football --days-back 7
 
       - name: Fetch team availability (injuries / suspensions)
         # api-football /injuries — no-op if FOOTBALL_API_KEY isn't set, so
