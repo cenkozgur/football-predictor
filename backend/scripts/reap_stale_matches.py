@@ -209,20 +209,34 @@ def _reap_via_api_football(
     for m in matches:
         by_date.setdefault(m.kickoff.date().isoformat(), []).append(m)
 
-    with af_client_factory(api_key) as client:
-        for date_iso, day_matches in by_date.items():
+    def _fixtures_around(client, target_date: str) -> list[dict[str, Any]]:
+        """Pull fixtures for target_date ±1 day, in one combined list.
+
+        Some fixtures cross UTC midnight so our stored date and api-football's
+        reported date differ by one. Without the ±1 day window we silently
+        miss the handful of stragglers that fall on a day boundary.
+        """
+        combined: list[dict[str, Any]] = []
+        d = datetime.fromisoformat(target_date)
+        for offset in (-1, 0, 1):
+            iso = (d + timedelta(days=offset)).date().isoformat()
             try:
-                data = _get(
+                resp = _get(
                     client,
                     "/fixtures",
-                    {"league": api_id, "season": season, "date": date_iso},
+                    {"league": api_id, "season": season, "date": iso},
                 )
+                combined.extend(resp.get("response", []))
             except Exception as exc:
-                print(f"  [{league_code} {date_iso}] api-football failed: {exc}")
+                print(f"  [{league_code} {iso}] api-football failed: {exc}")
+        return combined
+
+    with af_client_factory(api_key) as client:
+        for date_iso, day_matches in by_date.items():
+            rows = _fixtures_around(client, date_iso)
+            if not rows:
                 unresolved += len(day_matches)
                 continue
-
-            rows = data.get("response", [])
             for m in day_matches:
                 matched_row = None
                 for row in rows:
@@ -236,12 +250,26 @@ def _reap_via_api_football(
                     )
                     if resolved_home is None or resolved_away is None:
                         continue
-                    if (
+                    if not (
                         resolved_home.id == m.home_team_id
                         and resolved_away.id == m.away_team_id
                     ):
-                        matched_row = row
-                        break
+                        continue
+                    # Same teams on different days = different fixtures (e.g.
+                    # cup rematch). Only accept when kickoff is within 36h
+                    # so the ±1 day search window doesn't cross into an
+                    # unrelated fixture.
+                    api_date_str = (row.get("fixture") or {}).get("date") or ""
+                    try:
+                        api_kick = datetime.fromisoformat(
+                            api_date_str.replace("Z", "+00:00")
+                        ).replace(tzinfo=None)
+                    except ValueError:
+                        continue
+                    if abs((api_kick - m.kickoff).total_seconds()) > 36 * 3600:
+                        continue
+                    matched_row = row
+                    break
 
                 if matched_row is None:
                     unresolved += 1
