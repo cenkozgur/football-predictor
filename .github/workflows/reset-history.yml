@@ -1,0 +1,59 @@
+name: Reset User-Facing History
+
+# ONE-SHOT. workflow_dispatch only — no cron, no push trigger. Intended to
+# be fired manually once when the user wants to start the track record
+# from scratch. Preserves finished matches (model training data) but wipes
+# predictions + coupons + past-kickoff scheduled rows.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: "sqlite:///./football.db"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Wipe user-facing history
+        run: python -m scripts.reset_user_facing_history --confirm
+
+      - name: Regenerate predictions immediately for future matches
+        # Without this the Kuponlar page is empty until the next daily-ingest.
+        # Runs in seconds because it only predicts scheduled future rows.
+        run: python scripts/predict_upcoming.py
+
+      - name: Checkpoint SQLite WAL
+        run: |
+          sudo apt-get install -y sqlite3
+          sqlite3 football.db "PRAGMA wal_checkpoint(TRUNCATE);"
+
+      - name: Commit reset DB
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f football.db
+          if git diff --cached --quiet; then
+            echo "No DB changes — nothing to commit."
+          else
+            git commit -m "data: reset user-facing history $(date -u +%Y-%m-%dT%H:%MZ)"
+            for i in 1 2 3; do
+              if git push; then break; fi
+              git pull --rebase -X ours --autostash
+            done
+          fi
