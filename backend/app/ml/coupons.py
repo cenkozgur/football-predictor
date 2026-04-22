@@ -485,13 +485,24 @@ def _enumerate_picks(
         overround = overrounds.get(market, 1.0)
         edge = _value_edge(prob, book_prob, overround_multiplier=overround)
 
-        # Strategy gate: require a positive edge against the market. If we
-        # have no odds at all, skip — we won't play picks we can't compare.
-        # `require_edge=False` is the fallback pass: still needs odds (we refuse
-        # to play blind), but accepts zero/negative edge so boş-slate günlerde
-        # track record için tek bacaklı bir pick üretebiliyoruz.
+        # Strategy gate: require a positive edge against the market. In the
+        # normal pass we won't play picks we can't compare — if odds are
+        # missing we skip. In the fallback pass (`require_edge=False`), we
+        # also accept odds-less picks because smaller leagues' Big-5 CSVs
+        # are sparse and otherwise we'd snapshot nothing on quiet days. When
+        # that happens we synthesize `book_odds = 1 / prob` (i.e. zero-edge
+        # implied odds) so the coupon still has a payout figure to display;
+        # edge stays 0 and a reason string notes the provenance.
+        synthesized_odds = False
         if book_odds is None:
-            return
+            if require_edge:
+                return
+            if prob <= 0:
+                return
+            book_odds = 1.0 / prob
+            book_prob = prob
+            edge = 0.0
+            synthesized_odds = True
         if require_edge and edge < _MIN_VALUE_EDGE:
             return
 
@@ -512,7 +523,12 @@ def _enumerate_picks(
 
         reasons: list[str] = []
         reasons.append(f"Model olasılığı %{prob*100:.0f}")
-        if book_odds is not None:
+        if synthesized_odds:
+            reasons.append(
+                f"Piyasa oranı bulunamadı — model olasılığından tahmini oran "
+                f"{book_odds:.2f} kullanıldı"
+            )
+        elif book_odds is not None:
             if edge > 0.03:
                 reasons.append(
                     f"Piyasa oranı {book_odds:.2f} (impl %{book_prob*100:.0f}) — "
@@ -773,6 +789,14 @@ def suggest_coupons(
         if fallback_picks:
             fallback_picks.sort(key=lambda p: p.composite, reverse=True)
             top = fallback_picks[0]
+            # Prefer picks with real odds when they exist — synthesized-odds
+            # picks are still useful but a real market quote is more trustworthy.
+            real_odds_picks = [
+                p for p in fallback_picks
+                if "tahmini oran" not in " ".join(p.reasons)
+            ]
+            if real_odds_picks:
+                top = real_odds_picks[0]
             top.reasons.insert(
                 0,
                 "Bugün yüksek value bulamadık — model'in en güvendiği tekli seçim",
