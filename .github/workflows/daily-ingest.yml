@@ -57,6 +57,15 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
 
+      - name: Reap stale 'scheduled' matches (settle past-kickoff rows)
+        # Leagues outside our live-score polling window (FIN, IRL, NOR) get
+        # stuck as 'scheduled' long after kickoff. This sweeps the last 30
+        # days and settles any row whose provider reports FINISHED. Safe to
+        # run daily; only writes when ft_home is still NULL.
+        env:
+          FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
+        run: python -m scripts.reap_stale_matches --days-back 30
+
       - name: Ingest Big-5 current-season CSV (finished matches + odds)
         # football-data.co.uk publishes a per-league CSV that updates weekly
         # with new results. This is what feeds the standings → motivation chain.
