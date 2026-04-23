@@ -1,0 +1,37 @@
+name: EV+ Strategy Search
+
+on:
+  workflow_dispatch:
+    inputs:
+      leagues:
+        description: "Comma-separated internal codes (default: all)"
+        default: ""
+      months:
+        description: "Window in months"
+        default: "18"
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: "sqlite:///./football.db"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+      - name: Run EV+ grid search
+        run: |
+          set -e
+          LEAGUES_ARG=""
+          if [ -n "${{ inputs.leagues }}" ]; then
+            LEAGUES_ARG="--leagues ${{ inputs.leagues }}"
+          fi
+          python scripts/backtest_ev_search.py $LEAGUES_ARG --months ${{ inputs.months }}
