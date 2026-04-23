@@ -56,12 +56,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.db import SessionLocal
+from app.features.adjust import adjust_rates, score_matrix_from_rates
 from app.features.form import compute_team_form
-from app.features.motivation import adjust_rates, compute_team_motivation
+from app.features.motivation import compute_team_motivation
 from app.features.standings import build_standings
 from app.ml.coupons import suggest_coupons
 from app.ml.dixon_coles import DixonColesModel
-from app.ml.markets import build_full_payload, score_matrix_from_rates
+from app.ml.markets import build_full_payload
 from app.models.match import Match
 from app.models.odds import Odds
 from app.models.team import Team
