@@ -827,22 +827,34 @@ def suggest_coupons(
                 )
             )
         if fallback_picks:
-            fallback_picks.sort(key=lambda p: p.composite, reverse=True)
-            top = fallback_picks[0]
-            # Prefer picks with real odds when they exist — synthesized-odds
-            # picks are still useful but a real market quote is more trustworthy.
-            real_odds_picks = [
-                p for p in fallback_picks
-                if "tahmini oran" not in " ".join(p.reasons)
-            ]
-            if real_odds_picks:
-                top = real_odds_picks[0]
-            top.reasons.insert(
-                0,
-                "Bugün yüksek value bulamadık — model'in en güvendiği tekli seçim",
-            )
-            primary = Coupon(legs=[top])
-            is_fallback = True
+            # Pick the best pick *per match* first so the fallback coupon
+            # doesn't stack two legs from the same game. Then sort by
+            # composite and take `num_legs` of them. Real-odds picks come
+            # before synthesized-odds picks at equal composite so we favor
+            # market-grounded selections whenever possible.
+            best_by_match = _pick_best_per_match(fallback_picks)
+
+            def _is_synth(p: Pick) -> bool:
+                return any("tahmini oran" in r for r in p.reasons)
+
+            # Stable sort: real odds first, then composite descending.
+            best_by_match.sort(key=lambda p: (_is_synth(p), -p.composite))
+
+            # Respect the caller's num_legs request within what we actually
+            # have available. 3-leg ask on a 1-match slate still gives 1 leg.
+            target = max(min_legs, min(num_legs, len(best_by_match)))
+            chosen = best_by_match[:target]
+
+            if chosen:
+                lead_msg = (
+                    "Bugün yüksek value bulamadık — "
+                    f"model'in en güvendiği {len(chosen)} seçim"
+                ) if len(chosen) > 1 else (
+                    "Bugün yüksek value bulamadık — model'in en güvendiği tekli seçim"
+                )
+                chosen[0].reasons.insert(0, lead_msg)
+                primary = Coupon(legs=chosen)
+                is_fallback = True
 
     # Bankos (single-leg "sure" picks): use the best-composite pick per match,
     # ranked; this is a different view from the coupon composer.
