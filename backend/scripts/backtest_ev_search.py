@@ -33,6 +33,8 @@ Usage
 from __future__ import annotations
 
 import argparse
+import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -44,13 +46,23 @@ from sqlalchemy.orm import selectinload
 
 from app.db import SessionLocal
 from app.features.adjust import adjust_rates, score_matrix_from_rates
-from app.features.form import compute_team_form
-from app.features.motivation import compute_team_motivation
-from app.features.standings import build_standings
 from app.ml.dixon_coles import DixonColesModel
 from app.ml.markets import build_full_payload
 from app.models.match import Match
 from app.models.odds import Odds
+
+
+# Force line-buffered output so GitHub Actions streams progress as we go —
+# without this the run looks frozen until the end.
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except AttributeError:
+    pass
+
+
+def _log(msg: str) -> None:
+    """Timestamped progress print."""
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
 # Same source priority as composer
@@ -235,10 +247,40 @@ def _build_training_df(prior: list[Match], asof: datetime) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _bulk_odds_index(
+    db, match_ids: list[int]
+) -> dict[int, dict[tuple[str, str], float]]:
+    """One query loads all odds for the entire test window — 10-100x faster
+    than per-match round-trips on large walk-forwards.
+    """
+    if not match_ids:
+        return {}
+    rows = db.query(Odds).filter(Odds.match_id.in_(match_ids)).all()
+    by_match: dict[int, dict[tuple[str, str], float]] = {}
+    seen_prio: dict[int, dict[tuple[str, str], int]] = {}
+    for o in rows:
+        keys: list[tuple[str, str]] = [(o.market, o.selection)]
+        if o.market.startswith("OU_"):
+            keys.append((f"over_under_{o.market[3:]}", o.selection))
+        for key in keys:
+            prio = _SOURCE_PRIORITY.get(o.source, 99)
+            prev = seen_prio.setdefault(o.match_id, {}).get(key, 99)
+            if prio <= prev:
+                by_match.setdefault(o.match_id, {})[key] = float(o.decimal_odds)
+                seen_prio[o.match_id][key] = prio
+    return by_match
+
+
 def walk_forward(
     leagues: list[str] | None, months: int, refit_every: int, min_train: int
 ) -> list[Candidate]:
+    """Walk-forward backtest. Simplified: no motivation/form/availability
+    enrichment, just DC + odds. This isolates the 'does the model beat the
+    market with just xG-informed DC?' question and runs ~10x faster than
+    the composer-enriched version (which timed out on 18 mo + all leagues).
+    """
     candidates: list[Candidate] = []
+    t0 = time.monotonic()
     with SessionLocal() as db:
         cutoff = datetime.now(tz=timezone.utc).replace(tzinfo=None) - timedelta(days=30 * months)
         stmt = (
@@ -252,7 +294,7 @@ def walk_forward(
             stmt = stmt.where(Match.league.in_(leagues))
         matches = list(db.scalars(stmt).all())
         if not matches:
-            print("No matches in window.")
+            _log("No matches in window.")
             return candidates
 
         older_stmt = (
@@ -266,19 +308,14 @@ def walk_forward(
             older_stmt = older_stmt.where(Match.league.in_(leagues))
         older = list(db.scalars(older_stmt).all())
 
-        print(
+        _log(
             f"Walk-forward: {len(older)} training matches before window, "
             f"{len(matches)} test matches."
         )
 
-        standings_cache: dict[tuple, Any] = {}
-        def _cstand(league, season, asof):
-            k = (league, season, asof.date())
-            c = standings_cache.get(k)
-            if c is None:
-                c = build_standings(db, league, season, asof)
-                standings_cache[k] = c
-            return c
+        _log(f"Bulk-loading odds for {len(matches)} test matches…")
+        odds_cache = _bulk_odds_index(db, [m.id for m in matches])
+        _log(f"Loaded odds for {len(odds_cache)} matches.")
 
         model: DixonColesModel | None = None
         since_fit = refit_every
@@ -290,11 +327,18 @@ def walk_forward(
                 if len(train) < min_train:
                     since_fit += 1
                     continue
+                fit_t = time.monotonic()
                 try:
                     model = DixonColesModel.fit(train, xi=0.0018, l2=2.0)
                     fits += 1
+                    fit_elapsed = time.monotonic() - fit_t
+                    _log(
+                        f"  fit #{fits} at idx={idx}/{len(matches)} "
+                        f"(train={len(train)} rows, {fit_elapsed:.1f}s); "
+                        f"candidates so far: {len(candidates)}"
+                    )
                 except Exception as exc:
-                    print(f"  fit failed idx={idx}: {exc}")
+                    _log(f"  fit failed idx={idx}: {exc}")
                     since_fit += 1
                     continue
                 since_fit = 0
@@ -310,25 +354,21 @@ def walk_forward(
                 continue
 
             base_lam, base_mu = model.rates(hn, an)
-            try:
-                standings = _cstand(m.league, m.season, m.kickoff)
-                home_mot = compute_team_motivation(standings, m.home_team_id)
-                away_mot = compute_team_motivation(standings, m.away_team_id)
-                adj = adjust_rates(base_lam, base_mu, home_mot, away_mot)
-            except Exception:
-                adj = type("A", (), {"lam": base_lam, "mu": base_mu, "rho": 0})()
-
-            matrix = score_matrix_from_rates(adj.lam, adj.mu, model.rho)
+            matrix = score_matrix_from_rates(base_lam, base_mu, model.rho)
             payload = build_full_payload(matrix)
 
-            odds_by_key = _odds_index(db, m.id)
+            odds_by_key = odds_cache.get(m.id, {})
             if not odds_by_key:
                 continue
 
             cands = _enumerate_candidates(m, payload, odds_by_key)
             candidates.extend(cands)
 
-        print(f"Fits performed: {fits}, total candidates generated: {len(candidates)}")
+        elapsed = time.monotonic() - t0
+        _log(
+            f"Done. Fits: {fits}, candidates: {len(candidates)}, "
+            f"elapsed: {elapsed:.1f}s"
+        )
     return candidates
 
 
@@ -394,9 +434,10 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--leagues", default=None,
                    help="Comma-separated internal codes. Default: all with data.")
-    p.add_argument("--months", type=int, default=18)
-    p.add_argument("--refit-every", type=int, default=30)
-    p.add_argument("--min-train", type=int, default=500)
+    p.add_argument("--months", type=int, default=12)
+    p.add_argument("--refit-every", type=int, default=100,
+                   help="DC refit every N matches. Higher = faster, less accurate.")
+    p.add_argument("--min-train", type=int, default=300)
     args = p.parse_args()
     leagues = args.leagues.split(",") if args.leagues else None
     cands = walk_forward(
