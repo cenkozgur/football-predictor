@@ -210,17 +210,27 @@ def _enumerate_candidates(
     return out
 
 
-def _build_training_df(prior: list[Match]) -> pd.DataFrame:
+def _build_training_df(prior: list[Match], asof: datetime) -> pd.DataFrame:
+    """DC expects columns: home_team, away_team, home_goals, away_goals,
+    league, days_ago. Matches predict_upcoming._load_training_frame exactly."""
+    if asof.tzinfo is None:
+        asof = asof.replace(tzinfo=timezone.utc)
     rows = []
     for m in prior:
         if m.ft_home is None or m.ft_away is None:
             continue
         xh = m.xg_home if m.xg_home is not None else float(m.ft_home)
         xa = m.xg_away if m.xg_away is not None else float(m.ft_away)
+        kickoff = m.kickoff
+        if kickoff.tzinfo is None:
+            kickoff = kickoff.replace(tzinfo=timezone.utc)
         rows.append({
-            "league": m.league, "season": m.season,
-            "home": m.home_team.name, "away": m.away_team.name,
-            "home_goals": xh, "away_goals": xa, "kickoff": m.kickoff,
+            "home_team": m.home_team.name,
+            "away_team": m.away_team.name,
+            "home_goals": xh,
+            "away_goals": xa,
+            "league": m.league,
+            "days_ago": max(0, (asof - kickoff).days),
         })
     return pd.DataFrame(rows)
 
@@ -276,7 +286,7 @@ def walk_forward(
 
         for idx, m in enumerate(matches):
             if since_fit >= refit_every:
-                train = _build_training_df(older + matches[:idx])
+                train = _build_training_df(older + matches[:idx], asof=m.kickoff)
                 if len(train) < min_train:
                     since_fit += 1
                     continue
