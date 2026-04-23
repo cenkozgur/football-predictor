@@ -77,6 +77,28 @@ _W_AVAILABILITY = 0.10
 _MIN_VALUE_EDGE = 0.03
 
 
+# Per-league EV+ policy — derived from the backtest_ev_search grid scan on
+# 2026-04-23. Each entry narrows the normal pass to (markets, edge, min_prob)
+# that historically produced positive ROI in walk-forward. Leagues absent
+# from this dict are blocked from generating primary coupons; they fall
+# through to the fallback pass (which still honors min_prob but no edge
+# requirement, and is clearly tagged in the UI).
+#
+# Entries verified against both 6-mo and 18-mo windows. Edge/prob chosen as
+# the conservative side of the two (smaller sample → higher noise, so we
+# lean toward the 18-mo number with more picks).
+#
+# SP1 (La Liga) and F1 (Ligue 1) deliberately omitted — both windows were
+# net-negative. When they move into positive we'll add them.
+#
+#     dict value = (allowed_base_markets, min_edge, min_prob)
+_LEAGUE_POLICY: dict[str, tuple[set[str], float, float]] = {
+    "E0":  ({"over_under"},   0.03, 0.55),  # EPL — OU, +3.8% 18mo
+    "D1":  ({"over_under"},   0.03, 0.60),  # Bundesliga — OU, +3.1% 18mo
+    "I1":  ({"1X2"},          0.01, 0.50),  # Serie A — 1X2, +4.6% 18mo
+}
+
+
 @dataclass
 class Pick:
     """A single leg of a coupon — one selection on one match, with reasons."""
@@ -432,6 +454,21 @@ def _enumerate_picks(
     context = payload.get("context")
     out: list[Pick] = []
 
+    # Apply per-league EV+ policy on top of the generic allowed_markets/
+    # min_prob/edge gates. Only applies to the normal (require_edge) pass;
+    # the fallback pass bypasses league policy so that on boş-slate days
+    # we can still snapshot a tracked pick from any league.
+    league_markets: set[str] | None = None
+    league_min_edge: float = _MIN_VALUE_EDGE
+    league_min_prob_floor: float = 0.0
+    if require_edge:
+        pol = _LEAGUE_POLICY.get(league)
+        if pol is None:
+            # League has no verified edge strategy — suppress every pick in the
+            # normal pass. Fallback pass will still run if the caller asks.
+            return out
+        league_markets, league_min_edge, league_min_prob_floor = pol
+
     # Pre-compute per-market overround (book's total implied prob across all
     # selections) so we can de-vig before scoring edge. Key: "1X2",
     # "over_under_2.5", "btts", etc. A market only gets a real de-vig factor
@@ -473,7 +510,10 @@ def _enumerate_picks(
         base = _base_market(market)
         if allowed_markets is not None and base not in allowed_markets:
             return
-        if prob < min_prob:
+        # Per-league market whitelist (only applies in require_edge pass).
+        if league_markets is not None and base not in league_markets:
+            return
+        if prob < min_prob or prob < league_min_prob_floor:
             return
 
         book_odds = odds_by_key.get((market, selection))
@@ -503,7 +543,7 @@ def _enumerate_picks(
             book_prob = prob
             edge = 0.0
             synthesized_odds = True
-        if require_edge and edge < _MIN_VALUE_EDGE:
+        if require_edge and edge < max(_MIN_VALUE_EDGE, league_min_edge):
             return
 
         mot_score, mot_reason = _motivation_score(market, selection, context)
