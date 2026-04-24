@@ -845,6 +845,59 @@ def suggest_coupons(
             target = max(min_legs, min(num_legs, len(best_by_match)))
             chosen = best_by_match[:target]
 
+            # Combined-odds floor: a 3-leg fallback at 1.04 × 1.09 × 1.11 =
+            # 1.26 combined is not worth playing — payoff doesn't justify the
+            # compounded risk. If the top-composite selections don't clear
+            # the floor, we swap in higher-odds picks (still best-per-match,
+            # still above min_prob) to lift the combined. Only when we
+            # physically cannot reach the floor do we suppress the coupon
+            # entirely; the user sees "bugün uygun kombinasyon yok" instead
+            # of an anemic payout.
+            def _combined(picks: list[Pick]) -> float:
+                out = 1.0
+                for p in picks:
+                    if p.book_odds is not None:
+                        out *= p.book_odds
+                    elif p.prob > 0:
+                        out *= 1.0 / p.prob
+                return out
+
+            if chosen and _combined(chosen) < min_combined_odds:
+                # Sort remaining picks by descending odds so we can swap in
+                # the highest-odds candidates regardless of composite rank.
+                by_odds = sorted(
+                    best_by_match,
+                    key=lambda p: -(p.book_odds or (1.0 / max(p.prob, 1e-6))),
+                )
+                used = {p.match_id for p in chosen}
+                for cand in by_odds:
+                    if _combined(chosen) >= min_combined_odds:
+                        break
+                    if cand.match_id in used:
+                        continue
+                    # Drop the weakest (lowest-odds) current leg for this
+                    # higher-odds candidate. Keep num_legs stable.
+                    weakest_idx = min(
+                        range(len(chosen)),
+                        key=lambda i: chosen[i].book_odds or (1.0 / max(chosen[i].prob, 1e-6)),
+                    )
+                    weak_odds = chosen[weakest_idx].book_odds or (
+                        1.0 / max(chosen[weakest_idx].prob, 1e-6)
+                    )
+                    cand_odds = cand.book_odds or (1.0 / max(cand.prob, 1e-6))
+                    if cand_odds <= weak_odds:
+                        continue
+                    used.discard(chosen[weakest_idx].match_id)
+                    chosen[weakest_idx] = cand
+                    used.add(cand.match_id)
+
+            # If we still cannot reach the odds floor, suppress the fallback
+            # entirely — showing a 1.26 combined is anti-user. The UI will
+            # fall through to an empty state, which is the honest signal
+            # ("bugün oynanabilir kombinasyon yok, hafta sonu bekle").
+            if chosen and _combined(chosen) < min_combined_odds:
+                chosen = []
+
             if chosen:
                 lead_msg = (
                     "Bugün yüksek value bulamadık — "
