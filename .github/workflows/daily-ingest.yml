@@ -98,6 +98,19 @@ jobs:
           FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
         run: python -m scripts.fetch_availability --days-ahead 3
 
+      - name: Fetch pre-match odds for upcoming fixtures
+        # football-data.co.uk's CSV only has closing odds for FINISHED
+        # matches, so the day-of slate has zero odds for tomorrow's
+        # fixtures. Without this step the composer's value-edge gate
+        # rejects everything (observed 2026-04-25: 20 Big-5 matches, 0
+        # odds rows, 0 qualifying picks). api-football's /odds endpoint
+        # serves pre-match prices; we tag them with source='AFP' so the
+        # priority order still prefers football-data closing odds when
+        # both are available later.
+        env:
+          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m scripts.fetch_prematch_odds --days-ahead 3
+
       - name: Generate predictions for upcoming matches
         run: python scripts/predict_upcoming.py
 
