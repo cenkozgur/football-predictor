@@ -57,6 +57,15 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
 
+      - name: Ingest basketball games (NBA + EuroLeague + BSL) via api-sports
+        # Same api-sports account as api-football (one key, all sports).
+        # 3 leagues × 1 request = 3 calls/day, well inside the 100/day
+        # free-tier basketball quota. Lands in the sport_events table
+        # which the Bugün Ne Var app reads from /sport-events.
+        env:
+          API_SPORTS_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m app.ingestion.api_sports_basketball --days-ahead 14
+
       - name: Ingest Süper Lig fixtures via api-football (T1)
         # football-data.org's free tier doesn't carry Turkish Süper Lig.
         # api-football Pro covers it, and we already use api-football for
