@@ -37,20 +37,58 @@ import sys
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from difflib import get_close_matches
+
 from sqlalchemy import and_, select
 from sqlalchemy.orm import joinedload
 
 from app.db import SessionLocal
 from app.ingestion.api_football import (
     LEAGUE_MAP,
+    TEAM_ALIASES as AF_TEAM_ALIASES,
     _build_team_index,
     _client as af_client_factory,
     _get,
-    _resolve_team,
+    _normalize as _af_normalize,
 )
 from app.models.match import Match
 from app.models.odds import Odds
 from app.models.team import Team
+
+
+def _loose_resolve_team(
+    name: str,
+    team_index: dict[str, Team],
+    fuzzy_cache: dict[str, Team | None],
+    cutoff: float = 0.72,
+) -> Team | None:
+    """Same trick as the reaper: try alias → exact-normalized → substring →
+    fuzzy. The composer reads odds as informational input, not as the only
+    source of truth, so a wider net here is safe.
+    """
+    if name in AF_TEAM_ALIASES:
+        norm = _af_normalize(AF_TEAM_ALIASES[name])
+        if norm in team_index:
+            return team_index[norm]
+    norm = _af_normalize(name)
+    if not norm:
+        return None
+    if norm in team_index:
+        return team_index[norm]
+    if name in fuzzy_cache:
+        return fuzzy_cache[name]
+    # Substring pass: 'paris saint germain' contains 'paris sg' (after norm
+    # both sides drop common-word fillers); 'tps turku' contains 'tps'.
+    if len(norm) >= 3:
+        for key, team in team_index.items():
+            if len(key) >= 3 and (key in norm or norm in key):
+                fuzzy_cache[name] = team
+                return team
+    keys = list(team_index.keys())
+    close = get_close_matches(norm, keys, n=1, cutoff=cutoff)
+    team = team_index[close[0]] if close else None
+    fuzzy_cache[name] = team
+    return team
 
 
 # Source label written to Odds.source so we can tell apart api-football
@@ -195,6 +233,10 @@ def run(days_ahead: int = 3) -> None:
     skipped_already_have = 0
     not_found = 0
     api_calls = 0
+    # Track unmatched (our match, api-football names that couldn't resolve)
+    # so we can surface them in the log and add to TEAM_ALIASES.
+    unmatched_log: list[tuple[str, str, str, str]] = []  # (lg, db_home, db_away, date)
+    unresolved_api_names: set[str] = set()
 
     with af_client_factory(api_key) as client, SessionLocal() as db:
         matches = _upcoming_matches(db, days_ahead)
@@ -232,12 +274,19 @@ def run(days_ahead: int = 3) -> None:
             for row in data.get("response", []):
                 h = (row.get("teams") or {}).get("home") or {}
                 a = (row.get("teams") or {}).get("away") or {}
-                rh = _resolve_team(h.get("name", ""), team_index, fuzzy)
-                ra = _resolve_team(a.get("name", ""), team_index, fuzzy)
+                api_h_name = h.get("name", "") or ""
+                api_a_name = a.get("name", "") or ""
+                rh = _loose_resolve_team(api_h_name, team_index, fuzzy)
+                ra = _loose_resolve_team(api_a_name, team_index, fuzzy)
                 if rh and ra:
                     fid = (row.get("fixture") or {}).get("id")
                     if fid:
                         mapping[(rh.name, ra.name)] = fid
+                else:
+                    if not rh and api_h_name:
+                        unresolved_api_names.add(api_h_name)
+                    if not ra and api_a_name:
+                        unresolved_api_names.add(api_a_name)
             fixtures_by_day[key] = mapping
             return mapping
 
@@ -252,6 +301,9 @@ def run(days_ahead: int = 3) -> None:
             fixture_id = fixtures_map.get((m.home_team.name, m.away_team.name))
             if fixture_id is None:
                 not_found += 1
+                unmatched_log.append(
+                    (m.league, m.home_team.name, m.away_team.name, date_iso)
+                )
                 continue
 
             try:
@@ -277,6 +329,18 @@ def run(days_ahead: int = 3) -> None:
         f"{skipped_already_have} already had odds, {not_found} unmatched fixtures, "
         f"{api_calls} api-football calls."
     )
+    if unmatched_log:
+        # A — per-match logging so a quick log grep tells us what slipped.
+        print(f"\nUnmatched fixtures ({len(unmatched_log)}):")
+        for lg, h, a, dt in unmatched_log:
+            print(f"  [{lg}] {dt}  {h} vs {a}")
+    if unresolved_api_names:
+        # C — raw provider names that didn't resolve, sorted, deduped, ready
+        # to paste into TEAM_ALIASES once we know the right DB-side team.
+        names = sorted(unresolved_api_names)
+        print(f"\nProvider names that couldn't resolve to our DB ({len(names)}):")
+        for n in names:
+            print(f"  {n!r}")
 
 
 def main() -> None:
