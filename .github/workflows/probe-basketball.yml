@@ -1,0 +1,22 @@
+name: Probe basketball league IDs
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: "sqlite:///./football.db"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install .
+      - env:
+          API_SPORTS_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m app.ingestion.api_sports_basketball --probe

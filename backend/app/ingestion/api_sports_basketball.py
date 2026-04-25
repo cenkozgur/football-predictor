@@ -77,8 +77,39 @@ def fetch_games(
         r = c.get("/games", params=params)
         r.raise_for_status()
         body = r.json()
+    # Surface upstream errors and metadata so debugging "0 games" is
+    # not a guessing game in cron logs.
+    errs = body.get("errors")
+    if errs:
+        print(f"    api-basketball errors for league={league_id} season={season}: {errs}")
+    results = body.get("results")
+    if results == 0:
+        print(f"    api-basketball returned 0 results (params={params})")
     games = body.get("response", []) or []
     return games
+
+
+def probe_known_league_seasons(api_key: str) -> None:
+    """One-off helper: print the actual /leagues entries so we can fix
+    LEAGUE constants if the IDs / season labels we hard-coded are wrong.
+    Run via the workflow's manual dispatch when ingest returns 0 games."""
+    with _client(api_key) as c:
+        for q in ("NBA", "EuroLeague", "Turkish Basketball Super League", "Basketbol"):
+            try:
+                r = c.get("/leagues", params={"search": q})
+                body = r.json()
+                rows = body.get("response", []) or []
+                print(f"  search='{q}' → {len(rows)} matches")
+                for row in rows[:5]:
+                    seasons = row.get("seasons", []) or []
+                    season_labels = [s.get("season") for s in seasons[-3:]]
+                    print(
+                        f"    id={row.get('id')} name={row.get('name')!r} "
+                        f"country={(row.get('country') or {}).get('name')!r} "
+                        f"recent_seasons={season_labels}"
+                    )
+            except Exception as e:  # noqa: BLE001
+                print(f"  probe '{q}' failed: {e}")
 
 
 def upsert_event(session, ext_ref: str, fields: dict[str, Any]) -> str:
@@ -190,12 +221,20 @@ def run(api_key: str, days_ahead: int) -> None:
 def main() -> None:
     p = argparse.ArgumentParser(description="api-sports basketball ingester")
     p.add_argument("--days-ahead", type=int, default=14)
+    p.add_argument(
+        "--probe", action="store_true",
+        help="Skip ingest; print /leagues lookup so we can fix the ID constants.",
+    )
     args = p.parse_args()
 
     api_key = os.environ.get("API_SPORTS_KEY") or os.environ.get("API_FOOTBALL_KEY")
     if not api_key:
         print("Set API_SPORTS_KEY (or API_FOOTBALL_KEY — same key for all api-sports sports).")
         sys.exit(1)
+
+    if args.probe:
+        probe_known_league_seasons(api_key)
+        return
 
     run(api_key=api_key, days_ahead=args.days_ahead)
 
