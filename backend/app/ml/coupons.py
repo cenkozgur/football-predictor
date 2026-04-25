@@ -1012,53 +1012,65 @@ def _build_hit_prob_variant(
     min_prob_combined: float,
     excluded_match_ids: set[int],
 ) -> Coupon | None:
-    """Greedy selection: pick the highest-prob legs whose combined odds
-    fall inside [odds_lo, odds_hi] and whose product-of-probs reaches
-    min_prob_combined. We sort by raw model probability (descending),
-    enforce one leg per match, and stop once both windows are satisfied.
+    """Search for the highest-probability leg combination whose combined
+    odds fall inside [odds_lo, odds_hi].
 
-    The greedy heuristic isn't optimal but for 2-3 legs from a 30-50 pick
-    pool it's both fast and good enough; the user's eyeball would do the
-    same thing scrolling bilyoner.
+    Approach
+    --------
+    1. Collapse to one best leg per match (no duplicate-match coupons).
+    2. Sort candidates by descending probability so the top-K picks are
+       the ones most likely to actually hit.
+    3. Try combinations from a top-K pool (K=20 is plenty for 2-3 legs
+       and keeps the search O(K^num_legs) — under 10k iterations).
+    4. Keep only combinations inside the odds window; among those,
+       maximize combined probability. min_prob_combined acts as a soft
+       filter — if no combination meets it, the variant returns None.
+
+    This replaces the earlier greedy that silently rejected too many
+    candidates: greedy picks the highest-prob first, but the highest-prob
+    legs almost always have low odds (1.05-1.20), and adding a second
+    one keeps the combined odds below 1.4 — so it never enters the
+    'safe' window [1.4, 2.2] either. A tiny exhaustive search over the
+    top-K pool finds the natural sweet spot every band wants.
     """
+    from itertools import combinations
+
     by_match = _pick_best_per_match([p for p in picks if p.match_id not in excluded_match_ids])
-    if not by_match:
+    if len(by_match) < num_legs:
         return None
     by_match.sort(key=lambda p: -p.prob)
 
-    legs: list[Pick] = []
-    used_matches: set[int] = set()
+    # Top-K pool: enlarged to 60 because the top 20 by prob are almost
+    # always trivial picks like '0.5 Üst' at 1.03-1.10 odds — pairing
+    # two of those produces ~1.10 combined, well below even the 'safe'
+    # band's lower bound 1.4. We need a wider net so the odds-window
+    # filter has real candidates.
+    top_k = by_match[: min(60, len(by_match))]
 
-    for cand in by_match:
-        if cand.match_id in used_matches:
+    best: Coupon | None = None
+    best_prob = -1.0
+
+    for combo in combinations(top_k, num_legs):
+        # Market diversity: a coupon with two '0.5 Üst' legs from
+        # different matches has correlated outcomes the user expects
+        # diversification against. Forbid duplicates by base market.
+        bases = [_base_market(p.market) for p in combo]
+        if len(set(bases)) < len(bases):
             continue
-        # Tentatively add this leg and check whether we can still hit the
-        # odds window with `num_legs` legs total. If adding it pushes the
-        # combined odds past odds_hi, skip it; if combined-prob drops below
-        # the floor we'd need, also skip.
-        trial = legs + [cand]
         combined_odds = 1.0
         combined_prob = 1.0
-        for p in trial:
+        for p in combo:
             combined_odds *= (p.book_odds or (1.0 / max(p.prob, 1e-6)))
             combined_prob *= p.prob
-        # Hard upper bound — never exceed window.
-        if combined_odds > odds_hi:
+        if combined_odds < odds_lo or combined_odds > odds_hi:
             continue
-        legs.append(cand)
-        used_matches.add(cand.match_id)
-        if len(legs) >= num_legs:
-            break
+        if combined_prob < min_prob_combined:
+            continue
+        if combined_prob > best_prob:
+            best_prob = combined_prob
+            best = Coupon(legs=list(combo))
 
-    if len(legs) < num_legs:
-        return None
-
-    coupon = Coupon(legs=legs)
-    if coupon.combined_odds < odds_lo:
-        return None
-    if coupon.combined_prob < min_prob_combined:
-        return None
-    return coupon
+    return best
 
 
 def suggest_hit_probability_variants(
