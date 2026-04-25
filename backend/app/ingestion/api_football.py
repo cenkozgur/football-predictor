@@ -117,6 +117,43 @@ TEAM_ALIASES: dict[str, str] = {
     # Eredivisie (N1) — common provider variants
     "PSV Eindhoven": "PSV Eindhoven",
     "Feyenoord": "Feyenoord",
+
+    # Süper Lig (T1) — api-football sends Turkish names with diacritics +
+    # full club suffixes; the Team table stores the ASCII / shortened
+    # form football-data.co.uk uses, so the auto-normalizer misses these.
+    # Without these aliases ~6 of every 17 weekly fixtures are silently
+    # dropped (observed 2026-04-25: cost us Beşiktaş's match).
+    "Beşiktaş": "Besiktas",
+    "Galatasaray": "Galatasaray",
+    "Fenerbahçe": "Fenerbahce",
+    "Trabzonspor": "Trabzonspor",
+    "Başakşehir FK": "Basaksehir",
+    "Başakşehir": "Basaksehir",
+    "İstanbul Başakşehir": "Basaksehir",
+    "Fatih Karagümrük": "Karagumruk",
+    "Karagümrük": "Karagumruk",
+    "Gaziantep FK": "Gaziantep",
+    "Gaziantep": "Gaziantep",
+    "Gençlerbirliği S.K.": "Genclerbirligi",
+    "Gençlerbirliği": "Genclerbirligi",
+    "Göztepe": "Goztep",
+    "Eyüpspor": "Eyupspor",
+    "Kasımpaşa": "Kasimpasa",
+    "Adana Demirspor": "Adana Demirspor",
+    "Antalyaspor": "Antalyaspor",
+    "Konyaspor": "Konyaspor",
+    "Alanyaspor": "Alanyaspor",
+    "Sivasspor": "Sivasspor",
+    "Kayserispor": "Kayserispor",
+    "Çaykur Rizespor": "Rizespor",
+    "Rizespor": "Rizespor",
+    "Samsunspor": "Samsunspor",
+    "Kocaelispor": "Kocaelispor",
+    "Bodrum FK": "Bodrum",
+    "Bodrum": "Bodrum",
+    "Pendikspor": "Pendikspor",
+    "İstanbulspor": "Istanbulspor",
+    "Hatayspor": "Hatayspor",
 }
 
 
