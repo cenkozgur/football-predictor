@@ -79,8 +79,11 @@ LEAGUE_MAP: dict[str, tuple[int, int]] = {
 
 # Manual aliases for team names that don't match automatically.
 # Map api-football spelling → name as stored in our Team table.
-# Populate this as unmatched teams are reported.
+# Populate this as unmatched teams are reported by fetch_prematch_odds /
+# fetch_xg_api_football. Goal: every Big-5 + commonly-played league team
+# resolves on the first pass so the composer's odds coverage is full.
 TEAM_ALIASES: dict[str, str] = {
+    # Premier League (E0)
     "Manchester United": "Man United",
     "Manchester City": "Man City",
     "Tottenham": "Tottenham",
@@ -88,9 +91,32 @@ TEAM_ALIASES: dict[str, str] = {
     "Newcastle": "Newcastle",
     "Wolverhampton Wanderers": "Wolves",
     "Sheffield Utd": "Sheffield United",
+
+    # Ligue 1 (F1)
     "Paris Saint Germain": "Paris SG",
+
+    # Bundesliga (D1)
     "Bayern München": "Bayern Munich",
     "Borussia Mönchengladbach": "M'gladbach",
+
+    # La Liga (SP1) — api-football uses "Athletic Club" for Bilbao; the
+    # other shortenings here are how football-data.co.uk's CSV (our
+    # historical source) labels them, so our Team.name matches that style.
+    "Athletic Club": "Ath Bilbao",
+    "Atletico Madrid": "Ath Madrid",
+    "Real Sociedad": "Sociedad",
+    "Real Betis": "Betis",
+
+    # Primeira Liga (P1)
+    "Sporting CP": "Sp Lisbon",
+    "Sporting Braga": "Sp Braga",
+    "SC Braga": "Sp Braga",
+    "Vitoria Guimaraes": "Guimaraes",
+    "Vitória SC": "Guimaraes",
+
+    # Eredivisie (N1) — common provider variants
+    "PSV Eindhoven": "PSV Eindhoven",
+    "Feyenoord": "Feyenoord",
 }
 
 
