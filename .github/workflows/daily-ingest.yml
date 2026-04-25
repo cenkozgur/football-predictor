@@ -57,6 +57,18 @@ jobs:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
         run: python -m app.ingestion.football_data_org --days-ahead 14
 
+      - name: Ingest Süper Lig fixtures via api-football (T1)
+        # football-data.org's free tier doesn't carry Turkish Süper Lig.
+        # api-football Pro covers it, and we already use api-football for
+        # xG/odds/availability below. One extra /fixtures call per day is
+        # within budget. Bugün Ne Var app reads from /matches and surfaces
+        # T1 to Turkish users — the primary audience.
+        # NOTE: this module reads API_FOOTBALL_KEY (not FOOTBALL_API_KEY
+        # like the others — historical inconsistency).
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: python -m app.ingestion.api_football --leagues T1 --days-ahead 14 --no-odds
+
       - name: Reap stale 'scheduled' matches (settle past-kickoff rows)
         # Leagues outside our live-score polling window (FIN, IRL, NOR) get
         # stuck as 'scheduled' long after kickoff. This sweeps the last 30
