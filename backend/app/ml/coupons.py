@@ -939,3 +939,199 @@ def suggest_coupons(
             },
         },
     }
+
+
+# ---- hit-probability mode -------------------------------------------------
+#
+# A different question from "does the composer beat the bookmaker?" is "of
+# all the bets a Turkish user could place on bilyoner today, which 2-3 leg
+# combination is most likely to actually hit?". The composer above answers
+# the first question. The function below answers the second.
+#
+# We deliberately do NOT use the value_edge gate here, because:
+#   1. Bilyoner's margin is high enough that beating *bilyoner specifically*
+#      is rare even when our model has a real edge against efficient global
+#      books. Pretending otherwise misleads the user.
+#   2. The user's stated workflow is to pick 5 bilyoner legs by feel and
+#      hope; we want to replace that hope with model-backed selection,
+#      regardless of where bilyoner prices the market.
+#
+# Variants returned per call:
+#   - "Güvenli"  (safe)    : combined_prob >= 0.60, combined_odds in [1.4, 2.2]
+#   - "Dengeli" (balanced) : combined_prob >= 0.40, combined_odds in [2.2, 3.5]
+#   - "Cesur"   (bold)     : combined_prob >= 0.20, combined_odds in [3.5, 6.0]
+# Each variant is an independent pick of legs from the same all_picks pool,
+# without overlapping match_ids across variants (so the user sees three
+# distinct coupon proposals).
+
+
+_HIT_PROB_VARIANTS: list[tuple[str, str, float, float, float]] = [
+    # (key,        label,    min_prob, odds_lo, odds_hi)
+    ("safe",     "Güvenli", 0.60,     1.40,    2.20),
+    ("balanced", "Dengeli", 0.40,     2.20,    3.50),
+    ("bold",     "Cesur",   0.20,     3.50,    6.00),
+]
+
+
+def _enumerate_picks_no_edge_gate(
+    *,
+    match_id: int,
+    home: str,
+    away: str,
+    kickoff: str,
+    league: str,
+    payload: dict[str, Any],
+    odds_by_key: dict[tuple[str, str], float],
+    allowed_markets: set[str] | None,
+    min_prob: float,
+) -> list[Pick]:
+    """Same enumeration as the value-edge composer but without the edge
+    gate or per-league policy. Synthesizes 1/prob when odds are missing so
+    every pick has a payout figure to display.
+    """
+    return _enumerate_picks(
+        match_id=match_id,
+        home=home,
+        away=away,
+        kickoff=kickoff,
+        league=league,
+        payload=payload,
+        odds_by_key=odds_by_key,
+        allowed_markets=allowed_markets,
+        min_prob=min_prob,
+        require_edge=False,
+    )
+
+
+def _build_hit_prob_variant(
+    picks: list[Pick],
+    *,
+    num_legs: int,
+    odds_lo: float,
+    odds_hi: float,
+    min_prob_combined: float,
+    excluded_match_ids: set[int],
+) -> Coupon | None:
+    """Greedy selection: pick the highest-prob legs whose combined odds
+    fall inside [odds_lo, odds_hi] and whose product-of-probs reaches
+    min_prob_combined. We sort by raw model probability (descending),
+    enforce one leg per match, and stop once both windows are satisfied.
+
+    The greedy heuristic isn't optimal but for 2-3 legs from a 30-50 pick
+    pool it's both fast and good enough; the user's eyeball would do the
+    same thing scrolling bilyoner.
+    """
+    by_match = _pick_best_per_match([p for p in picks if p.match_id not in excluded_match_ids])
+    if not by_match:
+        return None
+    by_match.sort(key=lambda p: -p.prob)
+
+    legs: list[Pick] = []
+    used_matches: set[int] = set()
+
+    for cand in by_match:
+        if cand.match_id in used_matches:
+            continue
+        # Tentatively add this leg and check whether we can still hit the
+        # odds window with `num_legs` legs total. If adding it pushes the
+        # combined odds past odds_hi, skip it; if combined-prob drops below
+        # the floor we'd need, also skip.
+        trial = legs + [cand]
+        combined_odds = 1.0
+        combined_prob = 1.0
+        for p in trial:
+            combined_odds *= (p.book_odds or (1.0 / max(p.prob, 1e-6)))
+            combined_prob *= p.prob
+        # Hard upper bound — never exceed window.
+        if combined_odds > odds_hi:
+            continue
+        legs.append(cand)
+        used_matches.add(cand.match_id)
+        if len(legs) >= num_legs:
+            break
+
+    if len(legs) < num_legs:
+        return None
+
+    coupon = Coupon(legs=legs)
+    if coupon.combined_odds < odds_lo:
+        return None
+    if coupon.combined_prob < min_prob_combined:
+        return None
+    return coupon
+
+
+def suggest_hit_probability_variants(
+    match_predictions: list[dict[str, Any]],
+    *,
+    num_legs: int = 2,
+    min_prob_per_leg: float = 0.50,
+    allowed_markets: set[str] | None = None,
+    odds_by_match: dict[int, dict[tuple[str, str], float]] | None = None,
+) -> dict[str, Any]:
+    """Return three coupon variants tuned for hit-probability, not edge.
+
+    This is the user-facing answer to "I will bet on bilyoner anyway, just
+    tell me which 2-3 leg combination is statistically most likely to hit
+    in the payout band I want."
+
+    Returns:
+        {
+          "variants": [
+            {"key": "safe", "label": "Güvenli", "coupon": {...}, "min_prob_combined": 0.60},
+            {"key": "balanced", ...},
+            {"key": "bold", ...},
+          ],
+          "counts": {"matches_considered": N, "qualifying_picks": M},
+        }
+    The coupon dict is None when no combination meets that variant's window.
+    """
+    odds_by_match = odds_by_match or {}
+
+    all_picks: list[Pick] = []
+    for m in match_predictions:
+        all_picks.extend(
+            _enumerate_picks_no_edge_gate(
+                match_id=m["match_id"],
+                home=m["home_team"],
+                away=m["away_team"],
+                kickoff=m["kickoff"],
+                league=m["league"],
+                payload=m["payload"],
+                odds_by_key=odds_by_match.get(m["match_id"], {}),
+                allowed_markets=allowed_markets,
+                min_prob=min_prob_per_leg,
+            )
+        )
+
+    out_variants: list[dict[str, Any]] = []
+    excluded: set[int] = set()
+    for key, label, min_prob_combined, odds_lo, odds_hi in _HIT_PROB_VARIANTS:
+        coupon = _build_hit_prob_variant(
+            all_picks,
+            num_legs=num_legs,
+            odds_lo=odds_lo,
+            odds_hi=odds_hi,
+            min_prob_combined=min_prob_combined,
+            excluded_match_ids=excluded,
+        )
+        variant_payload: dict[str, Any] = {
+            "key": key,
+            "label": label,
+            "min_prob_combined": min_prob_combined,
+            "odds_window": [odds_lo, odds_hi],
+            "coupon": None,
+        }
+        if coupon is not None:
+            for leg in coupon.legs:
+                excluded.add(leg.match_id)
+            variant_payload["coupon"] = coupon.to_dict()
+        out_variants.append(variant_payload)
+
+    return {
+        "variants": out_variants,
+        "counts": {
+            "matches_considered": len(match_predictions),
+            "qualifying_picks": len(all_picks),
+        },
+    }
