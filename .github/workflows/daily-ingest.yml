@@ -102,14 +102,19 @@ jobs:
             python -m app.ingestion.football_data --league $lg --season 2526
           done
 
-      - name: Backfill xG from api-football (last 7 days)
-        # Replaces the Understat scraper which is now blocked from every cloud
-        # IP we can reach. api-football /fixtures/statistics returns
-        # expected_goals per fixture for the top-5 + Eredivisie + Primeira.
-        # No-op if FOOTBALL_API_KEY isn't set, so this can ship regardless.
-        env:
-          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
-        run: python -m scripts.fetch_xg_api_football --days-back 7
+      # DISABLED 2026-04-26 after xG ablation backtest. WITH-xG vs WITHOUT-xG
+      # produced ROI deltas of ±0.2pp across two refit cadences — well inside
+      # the statistical noise floor for our pick volume (~376 picks, std err
+      # ~2.6%). Conclusion: xG adds no measurable edge on top of Dixon-Coles
+      # already trained on 12k+ historical matches. The api-football
+      # subscription stays — pre-match odds and T1 fixtures justify the
+      # spend on their own. Restore this step if a future ablation shows xG
+      # contributing on a market we don't currently target.
+      #
+      # - name: Backfill xG from api-football (last 7 days)
+      #   env:
+      #     FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+      #   run: python -m scripts.fetch_xg_api_football --days-back 7
 
       - name: Fetch team availability (injuries / suspensions)
         # api-football /injuries — no-op if FOOTBALL_API_KEY isn't set, so
