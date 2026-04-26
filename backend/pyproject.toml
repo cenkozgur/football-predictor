@@ -25,6 +25,8 @@ dependencies = [
     "httpx>=0.27",
     "beautifulsoup4>=4.12",
     "lxml>=5.3",
+    # Push notifications (Web Push / VAPID)
+    "pywebpush>=2.0",
 ]
 
 [project.optional-dependencies]

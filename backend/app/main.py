@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, coupon_history, coupons, matches, predictions, sport_events, stats
+from app.api import auth, coupon_history, coupons, matches, predictions, push, sport_events, stats
 from app.db import Base, engine
 from app import models  # noqa: F401 — registers tables on Base.metadata
 
@@ -31,6 +31,7 @@ app.include_router(coupons.router, prefix="/coupons", tags=["coupons"])
 app.include_router(coupon_history.router, prefix="/coupons", tags=["coupons"])
 app.include_router(stats.router, prefix="/stats", tags=["stats"])
 app.include_router(sport_events.router, prefix="/sport-events", tags=["sport-events"])
+app.include_router(push.router, prefix="/push", tags=["push"])
 
 
 @app.get("/health")

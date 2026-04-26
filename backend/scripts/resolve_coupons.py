@@ -55,6 +55,7 @@ def run() -> dict[str, int]:
     resolved_legs = 0
     resolved_coupons = 0
     still_pending = 0
+    notifications: list[dict] = []  # collected, dispatched after commit
 
     with SessionLocal() as db:
         unresolved = (
@@ -83,10 +84,18 @@ def run() -> dict[str, int]:
                 coupon.hit = all(leg.hit for leg in coupon.legs)
                 coupon.resolved_at = datetime.now(tz=timezone.utc)
                 resolved_coupons += 1
+                # Build a push payload for this coupon's final state. We
+                # batch and fire AFTER the DB commit so a flaky push
+                # service can never block resolver progress.
+                notifications.append(_build_payload(coupon))
             else:
                 still_pending += 1
 
         db.commit()
+
+        # Best-effort dispatch. Never raises into resolver flow.
+        if notifications:
+            _dispatch_all(db, notifications)
 
     print(
         f"Resolved {resolved_legs} legs, finalized {resolved_coupons} coupons "
@@ -97,6 +106,46 @@ def run() -> dict[str, int]:
         "coupons_finalized": resolved_coupons,
         "still_pending": still_pending,
     }
+
+
+def _build_payload(coupon: Coupon) -> dict:
+    """One notification per finalized coupon, framed in the user's
+    language. Body keeps it short — title + 1-line summary fits the
+    Android/iOS notification heads-up area."""
+    won = bool(coupon.hit)
+    odds = coupon.combined_odds
+    odds_text = f"{odds:.2f}x" if odds else "—"
+    legs = coupon.legs or []
+    n = len(legs)
+    if won:
+        title = f"✅ Kupon TUTTU — {odds_text}"
+        body = f"{n} bacaklı kupon kazandı. İstatistiklere bak."
+    else:
+        title = f"❌ Kupon yatti — {odds_text}"
+        body = f"{n} bacaklı kupon kaybetti."
+    return {
+        "title": title,
+        "body": body,
+        "tag": f"coupon-{coupon.id}",
+        "url": "/istatistikler",
+    }
+
+
+def _dispatch_all(db, payloads: list[dict]) -> None:
+    """Lazy-import the push service so the resolver still runs on machines
+    that don't have pywebpush installed (CI, local dev without push)."""
+    try:
+        from app.services.push import broadcast, is_configured
+    except ImportError:
+        return
+    if not is_configured():
+        return
+    for payload in payloads:
+        try:
+            broadcast(db, payload)
+        except Exception as exc:  # noqa: BLE001
+            # Resolver finished its work; logging suffices.
+            print(f"  push dispatch failed: {exc}")
 
 
 if __name__ == "__main__":

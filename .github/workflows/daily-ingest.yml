@@ -52,6 +52,12 @@ jobs:
         # before main.py's create_all has run on this DB snapshot.
         run: python scripts/migrate_add_availability.py
 
+      - name: Migrate — ensure push_subscriptions table exists
+        # resolve_coupons (later in this workflow) hooks into the push
+        # service which queries this table. Pre-creating means the first
+        # ever resolver run after deploy doesn't fail.
+        run: python scripts/migrate_add_push.py
+
       - name: Ingest fixtures (next 14 days)
         env:
           FOOTBALL_DATA_ORG_KEY: ${{ secrets.FOOTBALL_DATA_ORG_KEY }}
@@ -148,6 +154,13 @@ jobs:
       - name: Resolve yesterday's coupons from finished match scores
         # Flips hit/miss on every leg whose underlying match now has a score;
         # marks a coupon itself as won/lost once every leg is resolved.
+        # Also fires Web Push notifications for every coupon transitioning
+        # from pending → final, when VAPID keys are configured. Missing
+        # keys = silent no-op, never blocks resolver progress.
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
         run: python scripts/resolve_coupons.py
 
       - name: Checkpoint SQLite WAL
