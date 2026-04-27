@@ -86,6 +86,30 @@ def unsubscribe(sub_id: int, db: Session = Depends(get_db)) -> dict[str, Any]:
     return {"ok": True, "id": sub.id}
 
 
+@router.get("/subscriptions/count")
+def subscription_count(db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Debug-only: how many subscriptions exist, active and dead. Helpful
+    when 'Test gönder' returns delivered=0 — distinguishes 'subscribe POST
+    never landed' from 'subscribe landed but endpoint already inactive'."""
+    rows = db.query(PushSubscription).all()
+    active = sum(1 for r in rows if r.active)
+    return {
+        "total": len(rows),
+        "active": active,
+        "inactive": len(rows) - active,
+        "endpoints": [
+            {
+                "id": r.id,
+                "active": r.active,
+                "endpoint_host": r.endpoint.split("//", 1)[-1].split("/", 1)[0] if r.endpoint else None,
+                "label": r.label,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ],
+    }
+
+
 @router.post("/test")
 def send_test(db: Session = Depends(get_db)) -> dict[str, Any]:
     """Broadcast a hello to every active subscription. Useful from the
