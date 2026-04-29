@@ -173,6 +173,12 @@ jobs:
         #
         # BASE44_API_KEY is a workspace-level key with full CRUD; probed
         # 2026-04-30 with GET/POST/PUT/DELETE all returning 200.
+        #
+        # `if: always()` so sync_bnv still runs when an earlier step
+        # (e.g. predict_upcoming) fails. The predictor pipeline is
+        # noisy and its failures shouldn't keep Bugün Ne Var users from
+        # getting the day's fixtures — these are independent concerns.
+        if: always()
         env:
           BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
         run: python -m scripts.sync_bnv
