@@ -107,14 +107,27 @@ def _client(api_key: str) -> httpx.Client:
 
 
 def _stale_matches(db, days_back: int) -> list[Match]:
-    """`scheduled` rows whose kickoff is >12h in the past, within window."""
+    """Rows that should have a final score by now but don't.
+
+    Two cases the reaper cleans up:
+    1. `scheduled` rows whose kickoff is >3h in the past — live-scores
+       worker either missed the IN_PLAY window or the league isn't on
+       football-data.org's live feed.
+    2. `paused` rows whose kickoff is >3h in the past — provider's
+       /matches?status=FINISHED window dropped the row before our
+       worker observed the final-whistle transition (observed
+       2026-04-27 with Cagliari vs Atalanta sticking at 'paused').
+
+    Cutoff loosened from 12h to 3h since most matches finish within
+    2.5h of kickoff; anything older is safely 'should be finished'.
+    """
     now_naive = datetime.now(tz=timezone.utc).replace(tzinfo=None)
-    cutoff_recent = now_naive - timedelta(hours=12)
+    cutoff_recent = now_naive - timedelta(hours=3)
     cutoff_old = now_naive - timedelta(days=days_back)
     stmt = (
         select(Match)
         .options(joinedload(Match.home_team), joinedload(Match.away_team))
-        .where(Match.status == "scheduled")
+        .where(Match.status.in_(("scheduled", "paused", "in_play")))
         .where(Match.kickoff < cutoff_recent)
         .where(Match.kickoff >= cutoff_old)
         .order_by(Match.kickoff.asc())
@@ -287,6 +300,9 @@ def _reap_via_api_football(
                 m.ft_home = int(home_goals)
                 m.ft_away = int(away_goals)
                 m.status = "finished"
+                m.live_minute = None
+                m.live_home = None
+                m.live_away = None
                 resolved += 1
 
     return resolved, unresolved
@@ -352,6 +368,12 @@ def run(days_back: int = 30) -> None:
                     m.ft_home = int(home_goals)
                     m.ft_away = int(away_goals)
                     m.status = "finished"
+                    # Clear stale live_* values left over when the row
+                    # spent time in 'paused' or 'in_play'. Otherwise the
+                    # UI still renders a "live" badge on a finished row.
+                    m.live_minute = None
+                    m.live_home = None
+                    m.live_away = None
                     resolved += 1
             elif league_code in AF_LEAGUE_MAP:
                 # Fallback to api-football for leagues outside FDO free tier
