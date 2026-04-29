@@ -163,6 +163,20 @@ jobs:
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
         run: python scripts/resolve_coupons.py
 
+      - name: Sync Bugün Ne Var (push fixtures + rosters to Base44)
+        # Reads the data the previous steps just produced (football
+        # fixtures, basketball games, etc.) plus statics (MotoGP/WSBK
+        # calendars, TV events, full team rosters) and upserts into
+        # Bugün Ne Var's Base44 entities via REST. Dedup by external_ref
+        # so re-running is idempotent. Replaces the manual /seed page
+        # users used to open every morning.
+        #
+        # BASE44_API_KEY is a workspace-level key with full CRUD; probed
+        # 2026-04-30 with GET/POST/PUT/DELETE all returning 200.
+        env:
+          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+        run: python -m scripts.sync_bnv
+
       - name: Checkpoint SQLite WAL
         run: |
           sudo apt-get install -y sqlite3
