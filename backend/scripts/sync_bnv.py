@@ -61,9 +61,9 @@ SEASON_YEAR = 2026
 # writes. Same constants the browser /seed uses, scaled a touch larger
 # because cron gets one shot and we'd rather take 60s than have a write
 # silently dropped.
-WRITE_SLEEP_S = 0.10
-BREATH_EVERY_N = 20
-BREATH_SLEEP_S = 0.8
+WRITE_SLEEP_S = 0.15
+BREATH_EVERY_N = 15
+BREATH_SLEEP_S = 1.0
 
 # Football window — keep aligned with dataSources.js
 FOOTBALL_WINDOW_DAYS = 14
@@ -79,6 +79,36 @@ def _client() -> httpx.Client:
         headers={"api_key": api_key, "Content-Type": "application/json"},
         timeout=30.0,
     )
+
+
+def _request_with_retry(method, *args, **kwargs):
+    """Wrap an httpx call with exponential backoff on 429.
+
+    Base44 occasionally rate-limits bursts even with our per-write
+    sleeps. Two retries with a 2s / 5s backoff cleared every 429
+    observed in the 2026-04-30 dry run."""
+    last_exc = None
+    for attempt, delay in enumerate((0, 2.0, 5.0)):
+        if delay:
+            time.sleep(delay)
+        try:
+            r = method(*args, **kwargs)
+            if r.status_code == 429:
+                last_exc = httpx.HTTPStatusError(
+                    f"429 on attempt {attempt + 1}",
+                    request=r.request, response=r,
+                )
+                continue
+            r.raise_for_status()
+            return r
+        except httpx.HTTPStatusError as exc:
+            if exc.response is not None and exc.response.status_code == 429:
+                last_exc = exc
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("unreachable")
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -709,26 +739,22 @@ def build_static_team_seeds() -> list[dict[str, Any]]:
 # ──────────────────────────────────────────────────────────────────────
 
 def _list_all(client: httpx.Client, entity: str) -> list[dict[str, Any]]:
-    r = client.get(f"{BASE44_API}/{entity}")
-    r.raise_for_status()
+    r = _request_with_retry(client.get, f"{BASE44_API}/{entity}")
     return r.json()
 
 
 def _create(client: httpx.Client, entity: str, body: dict[str, Any]) -> dict[str, Any]:
-    r = client.post(f"{BASE44_API}/{entity}", json=body)
-    r.raise_for_status()
+    r = _request_with_retry(client.post, f"{BASE44_API}/{entity}", json=body)
     return r.json()
 
 
 def _update(client: httpx.Client, entity: str, row_id: str, patch: dict[str, Any]) -> dict[str, Any]:
-    r = client.put(f"{BASE44_API}/{entity}/{row_id}", json=patch)
-    r.raise_for_status()
+    r = _request_with_retry(client.put, f"{BASE44_API}/{entity}/{row_id}", json=patch)
     return r.json()
 
 
 def _delete(client: httpx.Client, entity: str, row_id: str) -> None:
-    r = client.delete(f"{BASE44_API}/{entity}/{row_id}")
-    r.raise_for_status()
+    _request_with_retry(client.delete, f"{BASE44_API}/{entity}/{row_id}")
 
 
 def _throttle(idx: int) -> None:
