@@ -154,6 +154,35 @@ class DixonColesModel:
         home_goals = matches["home_goals"].to_numpy(dtype=float)
         away_goals = matches["away_goals"].to_numpy(dtype=float)
 
+        # Defensive: a row whose team or league failed to map (rare but
+        # observed in production when fixture upserts brought in new
+        # leagues mid-day before team_to_league was rebuilt) lands here as
+        # NaN, which propagates as object dtype and crashes np.exp's
+        # integer-indexing with 'arrays used as indices must be of integer
+        # (or boolean) type'. Drop those rows before fitting; logging tells
+        # us if it's a real schema drift vs. a one-off.
+        valid = (
+            ~pd.isna(home_ix)
+            & ~pd.isna(away_ix)
+            & ~pd.isna(league_ix)
+        )
+        if not valid.all():
+            dropped = int((~valid).sum())
+            print(
+                f"  dropped {dropped}/{len(matches)} rows with unknown team/league"
+            )
+            home_ix = home_ix[valid]
+            away_ix = away_ix[valid]
+            league_ix = league_ix[valid]
+            home_goals = home_goals[valid]
+            away_goals = away_goals[valid]
+            weights = weights[valid]
+        # Now safe to coerce to int64 — map() returns object when any NaN
+        # is present, which is no longer the case after the filter above.
+        home_ix = home_ix.astype(np.int64)
+        away_ix = away_ix.astype(np.int64)
+        league_ix = league_ix.astype(np.int64)
+
         # Parameter vector: [alpha(n), beta(n), gamma(nl), delta(nl), rho]
         x0 = np.concatenate(
             [
