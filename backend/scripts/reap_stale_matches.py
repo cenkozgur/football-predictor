@@ -387,11 +387,42 @@ def run(days_back: int = 30) -> None:
             else:
                 leagues_skipped += 1
 
+        # Last-chance fallback: any match that the provider couldn't
+        # match against and which has been stuck in 'paused'/'in_play'
+        # for more than 6 hours, but DID get a live snapshot before the
+        # worker missed the FINISHED transition, gets finalized from
+        # live_*. We trust the snapshot — that is what the user saw on
+        # TV. Only kicks in when ALL provider paths above failed; the
+        # 6h cutoff makes sure we never close out a still-running game.
+        finalized_from_live = 0
+        live_recovery_cutoff = datetime.now(tz=timezone.utc).replace(tzinfo=None) - timedelta(hours=6)
+        for m in stale:
+            if m.ft_home is not None and m.ft_away is not None:
+                continue  # provider path settled this one
+            if m.status not in ("paused", "in_play"):
+                continue
+            if m.kickoff >= live_recovery_cutoff:
+                continue
+            if m.live_home is None or m.live_away is None:
+                continue
+            print(
+                f"  live-recovery: [{m.league}] {m.home_team.name} "
+                f"{m.live_home}-{m.live_away} {m.away_team.name} ({m.kickoff})"
+            )
+            m.ft_home = m.live_home
+            m.ft_away = m.live_away
+            m.status = "finished"
+            m.live_minute = None
+            m.live_home = None
+            m.live_away = None
+            finalized_from_live += 1
+
         db.commit()
 
     print(
         f"Reaper: resolved {resolved}, unresolved {unresolved}, "
-        f"leagues outside provider {leagues_skipped}."
+        f"leagues outside provider {leagues_skipped}, "
+        f"live-recovery {finalized_from_live}."
     )
 
 
