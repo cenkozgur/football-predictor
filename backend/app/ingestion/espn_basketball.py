@@ -106,6 +106,14 @@ def parse_event(g: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
         away_name = (competitors[1].get("team") or {}).get("displayName")
     if not home_name or not away_name:
         return None
+    # ESPN populates the bracket with "TBD vs TBD" placeholders for
+    # later-round matchups whose participants aren't decided yet.
+    # These have stable ext_refs so they upsert cleanly, but they are
+    # noise for end users — Bugün Ne Var would show "TBD vs TBD" cards
+    # in the Yakında list. Drop them at ingest time; once ESPN fills
+    # the names in, our next run will pick them up properly.
+    if home_name.strip().upper() == "TBD" or away_name.strip().upper() == "TBD":
+        return None
 
     venue = ((comp.get("venue") or {}).get("fullName")) or ""
     status = normalize_status(g.get("status"))
@@ -140,6 +148,62 @@ def upsert(session, ext_ref: str, fields: dict[str, Any]) -> str:
     return "updated" if changed else "skip"
 
 
+def reconcile_day(session, day, espn_ext_refs: set[str]) -> int:
+    """Drop ghost rows: events we previously stored as `scheduled` for
+    `day` that ESPN no longer lists when we re-query that day.
+
+    Why this exists: ESPN's scoreboard sometimes serves an
+    ID for a playoff game that was reserved-but-then-not-played (e.g.
+    Game 5 of a 4-2 series that ended in Game 6). We ingested it on
+    day N as `scheduled`, but on day N+M ESPN drops it from the
+    daily scoreboard entirely. Our row goes stale forever — Bugün
+    Ne Var keeps showing the user a non-existent Lakers-Rockets game.
+
+    Reconcile rule (intentionally narrow):
+        - Same league + same kickoff calendar day
+        - status == 'scheduled'   (don't touch finished/in_play games)
+        - external_ref NOT in the ESPN response we just fetched
+        ⇒ delete
+
+    We never delete `finished` rows — those are historical truth and
+    other parts of the app rely on them. We also never delete
+    `in_play` rows mid-game (status flip happens later in upsert).
+    """
+    if not espn_ext_refs and day < datetime.now(tz=timezone.utc).date():
+        # Empty payload for a past date is normal (ESPN trims old days).
+        # Don't reconcile against an empty set or we'd wipe historical
+        # rows we already marked finished. Sanity guard.
+        return 0
+
+    # Day window in UTC: ESPN's scoreboard groups by US/Eastern morning
+    # but kickoffs are in UTC. A 7pm ET tipoff lands at 23:00 UTC same
+    # day or 03:00 UTC next day. We err on the side of inclusion: any
+    # row whose kickoff lands in the 24h centered on our query day is
+    # a candidate. Slightly wide, but the external_ref check keeps it
+    # from over-deleting — only rows ESPN never reported for ANY of
+    # the queried days will ultimately be removed (see run() below).
+    day_start = datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc)
+    day_end = day_start + timedelta(days=1)
+
+    candidates = session.scalars(
+        select(SportEvent).where(
+            SportEvent.sport == "basketball",
+            SportEvent.league == "NBA",
+            SportEvent.status == "scheduled",
+            SportEvent.kickoff >= day_start,
+            SportEvent.kickoff < day_end,
+        )
+    ).all()
+
+    removed = 0
+    for row in candidates:
+        if row.external_ref in espn_ext_refs:
+            continue
+        session.delete(row)
+        removed += 1
+    return removed
+
+
 def run(days_ahead: int) -> None:
     today = datetime.now(tz=timezone.utc).date()
     days = [today + timedelta(days=i) for i in range(days_ahead + 1)]
@@ -147,6 +211,13 @@ def run(days_ahead: int) -> None:
 
     inserted = updated = unchanged = 0
     skipped = 0
+    deleted = 0
+
+    # Collect ALL refs ESPN returned across the entire window first.
+    # If we reconciled per-day with only that day's refs, a game that
+    # ESPN moved by ±1 day would get falsely deleted. Cross-day union
+    # makes the reconcile resilient to date-bucket flips.
+    espn_refs_by_day: dict[str, set[str]] = {}
 
     with _client() as client, SessionLocal() as session:
         for d in days:
@@ -155,17 +226,21 @@ def run(days_ahead: int) -> None:
                 games = fetch_day(client, date_str)
             except httpx.HTTPStatusError as e:
                 print(f"  [{date_str}] HTTP {e.response.status_code}")
+                espn_refs_by_day[date_str] = set()
                 continue
             except httpx.HTTPError as e:
                 print(f"  [{date_str}] network error: {e}")
+                espn_refs_by_day[date_str] = set()
                 continue
 
+            day_refs: set[str] = set()
             for g in games:
                 parsed = parse_event(g)
                 if parsed is None:
                     skipped += 1
                     continue
                 ext_ref, fields = parsed
+                day_refs.add(ext_ref)
                 outcome = upsert(session, ext_ref, fields)
                 if outcome == "inserted":
                     inserted += 1
@@ -173,11 +248,31 @@ def run(days_ahead: int) -> None:
                     updated += 1
                 else:
                     unchanged += 1
+            espn_refs_by_day[date_str] = day_refs
+
+        # Reconcile pass: for each day in our window, drop any
+        # `scheduled` NBA row that ESPN didn't list under ANY day of
+        # this window's union. The cross-day union protects against
+        # benign timezone bucket flips where ESPN lists a game one
+        # calendar day off from where we stored it.
+        all_espn_refs = set().union(*espn_refs_by_day.values())
+        for d in days:
+            if not all_espn_refs:
+                # Network failure for the whole window — bail out of
+                # reconcile entirely rather than mass-delete on a
+                # transient outage.
+                print("  reconcile skipped: ESPN returned 0 refs across window (likely network issue)")
+                break
+            removed = reconcile_day(session, d, all_espn_refs)
+            if removed:
+                print(f"  [{d.strftime('%Y%m%d')}] reconciled {removed} ghost row(s)")
+            deleted += removed
 
         session.commit()
 
     print(
-        f"Done. inserted={inserted} updated={updated} unchanged={unchanged} skipped={skipped}"
+        f"Done. inserted={inserted} updated={updated} unchanged={unchanged} "
+        f"deleted={deleted} skipped={skipped}"
     )
 
 
