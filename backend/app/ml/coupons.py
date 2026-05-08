@@ -513,6 +513,17 @@ def _enumerate_picks(
         # Per-league market whitelist (only applies in require_edge pass).
         if league_markets is not None and base not in league_markets:
             return
+
+        # Calibrate the raw model probability before any downstream
+        # comparison. Production track record showed raw probs were
+        # systematically overconfident (model says 65% → actual 25%);
+        # the calibrator (fit on 21k historical matches via
+        # scripts/fit_calibration.py) bends those raw outputs toward
+        # observed frequencies. When no calibrator file exists, the
+        # bundle returns identity and behavior matches the old code.
+        from app.ml.prob_calibration import calibrate_prob
+        prob = calibrate_prob(market, prob)
+
         if prob < min_prob or prob < league_min_prob_floor:
             return
 

@@ -146,6 +146,18 @@ jobs:
       - name: Generate predictions for upcoming matches
         run: python scripts/predict_upcoming.py
 
+      - name: Refit probability calibration curves
+        # Per-market isotonic regression on the historical pool. The
+        # calibrator output (calibration_curves.json) bends the
+        # composer's raw model probabilities toward observed
+        # frequencies — production track record showed model said
+        # 65% on picks that hit only 25%, etc. Fit is heavy (multiple
+        # DC refits across 21k matches), so high sample-rate keeps
+        # runtime under 5 min. Failures are non-blocking; composer
+        # falls back to identity calibration when the file is missing.
+        run: python scripts/fit_calibration.py --sample-rate 50
+        continue-on-error: true
+
       - name: Snapshot today's coupon suggestions into history
         # Persists whatever /coupons would return right now, so the app can
         # show "geçmiş kuponlar" with hit/miss badges after matches settle.
