@@ -222,17 +222,26 @@ def _enumerate_candidates(
     return out
 
 
-def _build_training_df(prior: list[Match], asof: datetime) -> pd.DataFrame:
+def _build_training_df(prior: list[Match], asof: datetime, use_xg: bool = True) -> pd.DataFrame:
     """DC expects columns: home_team, away_team, home_goals, away_goals,
-    league, days_ago. Matches predict_upcoming._load_training_frame exactly."""
+    league, days_ago. Matches predict_upcoming._load_training_frame exactly.
+
+    `use_xg=False` ablation: train on raw ft_home/ft_away even when xG is
+    available, so we can measure the marginal contribution of the
+    api-football xG subscription against a counterfactual baseline.
+    """
     if asof.tzinfo is None:
         asof = asof.replace(tzinfo=timezone.utc)
     rows = []
     for m in prior:
         if m.ft_home is None or m.ft_away is None:
             continue
-        xh = m.xg_home if m.xg_home is not None else float(m.ft_home)
-        xa = m.xg_away if m.xg_away is not None else float(m.ft_away)
+        if use_xg:
+            xh = m.xg_home if m.xg_home is not None else float(m.ft_home)
+            xa = m.xg_away if m.xg_away is not None else float(m.ft_away)
+        else:
+            xh = float(m.ft_home)
+            xa = float(m.ft_away)
         kickoff = m.kickoff
         if kickoff.tzinfo is None:
             kickoff = kickoff.replace(tzinfo=timezone.utc)
@@ -272,7 +281,8 @@ def _bulk_odds_index(
 
 
 def walk_forward(
-    leagues: list[str] | None, months: int, refit_every: int, min_train: int
+    leagues: list[str] | None, months: int, refit_every: int, min_train: int,
+    use_xg: bool = True,
 ) -> list[Candidate]:
     """Walk-forward backtest. Simplified: no motivation/form/availability
     enrichment, just DC + odds. This isolates the 'does the model beat the
@@ -323,7 +333,7 @@ def walk_forward(
 
         for idx, m in enumerate(matches):
             if since_fit >= refit_every:
-                train = _build_training_df(older + matches[:idx], asof=m.kickoff)
+                train = _build_training_df(older + matches[:idx], asof=m.kickoff, use_xg=use_xg)
                 if len(train) < min_train:
                     since_fit += 1
                     continue
@@ -438,6 +448,9 @@ def main() -> None:
     p.add_argument("--refit-every", type=int, default=100,
                    help="DC refit every N matches. Higher = faster, less accurate.")
     p.add_argument("--min-train", type=int, default=300)
+    p.add_argument("--no-xg", action="store_true",
+                   help="Train on ft_home/ft_away only, ignore xG. Used to "
+                        "measure xG's marginal contribution.")
     args = p.parse_args()
     leagues = args.leagues.split(",") if args.leagues else None
     cands = walk_forward(
@@ -445,7 +458,9 @@ def main() -> None:
         months=args.months,
         refit_every=args.refit_every,
         min_train=args.min_train,
+        use_xg=not args.no_xg,
     )
+    print(f"\n[xG mode: {'OFF' if args.no_xg else 'ON'}]")
     grid_search(cands, leagues)
 
 
