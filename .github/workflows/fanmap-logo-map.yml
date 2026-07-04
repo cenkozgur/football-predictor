@@ -1,0 +1,27 @@
+# TEMPORARY utility for the fan-map side project: maps fan-map clubs to
+# api-football team IDs so the app can show club logos. Manual trigger only.
+# Delete this file + scratch/fanmap-logo-map/ once the mapping is committed.
+name: FanMap Logo Map
+
+on:
+  workflow_dispatch:
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Map clubs to api-football logos
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+        run: |
+          mkdir -p out
+          OUT_DIR=out node scratch/fanmap-logo-map/map-logos.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fanmap-logo-map
+          path: out/

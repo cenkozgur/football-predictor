@@ -1,0 +1,4218 @@
+[
+ {
+  "name": "1. FC Heidenheim",
+  "country": "Germany"
+ },
+ {
+  "name": "1. FC Köln",
+  "country": "Germany"
+ },
+ {
+  "name": "2 de Mayo",
+  "country": "Paraguay"
+ },
+ {
+  "name": "A.E. Kifisia",
+  "country": "Greece"
+ },
+ {
+  "name": "Aalesund",
+  "country": "Norway"
+ },
+ {
+  "name": "ABB",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Aberdeen",
+  "country": "Scotland"
+ },
+ {
+  "name": "Abia Warriors",
+  "country": "Nigeria"
+ },
+ {
+  "name": "AC Oulu",
+  "country": "Finland"
+ },
+ {
+  "name": "AC Rangers",
+  "country": "DR Congo"
+ },
+ {
+  "name": "Academia Puerto Cabello",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Accra Lions",
+  "country": "Ghana"
+ },
+ {
+  "name": "Achuapa",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Adelaide United",
+  "country": "Australia"
+ },
+ {
+  "name": "ADT",
+  "country": "Peru"
+ },
+ {
+  "name": "Aduana Stars",
+  "country": "Ghana"
+ },
+ {
+  "name": "AEK Athens",
+  "country": "Greece"
+ },
+ {
+  "name": "AEL",
+  "country": "Greece"
+ },
+ {
+  "name": "AFC Ajax",
+  "country": "Netherlands"
+ },
+ {
+  "name": "AFC Leopards",
+  "country": "Kenya"
+ },
+ {
+  "name": "AGF",
+  "country": "Denmark"
+ },
+ {
+  "name": "Águila",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Águilas Doradas",
+  "country": "Colombia"
+ },
+ {
+  "name": "AIK",
+  "country": "Sweden"
+ },
+ {
+  "name": "AJ Auxerre",
+  "country": "France"
+ },
+ {
+  "name": "Ajman",
+  "country": "UAE"
+ },
+ {
+  "name": "Akhmat Grozny",
+  "country": "Russia"
+ },
+ {
+  "name": "Akron Tolyatti",
+  "country": "Russia"
+ },
+ {
+  "name": "Akwa United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Al Ahli",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Ahly",
+  "country": "Egypt"
+ },
+ {
+  "name": "Al Ain",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Arabi",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Bataeh",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Dhafra",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Duhail",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Ettifaq",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Fateh",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Fayha",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Gharafa",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Hazem",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Hilal",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Ittihad",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Ittihad Alexandria",
+  "country": "Egypt"
+ },
+ {
+  "name": "Al Jazira",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Khaleej",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Kholood",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Masry",
+  "country": "Egypt"
+ },
+ {
+  "name": "Al Najma",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Nasr",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Nassr",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Okhdood",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Qadsiah",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Rayyan",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Riyadh",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Sadd",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Sailiya",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Shabab",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Shahaniya",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Shamal",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Taawoun",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Al Wahda",
+  "country": "UAE"
+ },
+ {
+  "name": "Al Wakrah",
+  "country": "Qatar"
+ },
+ {
+  "name": "Al Wasl",
+  "country": "UAE"
+ },
+ {
+  "name": "Alajuelense",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Alanyaspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Albirex Niigata",
+  "country": "Japan"
+ },
+ {
+  "name": "Aldosivi",
+  "country": "Argentina"
+ },
+ {
+  "name": "Alianza",
+  "country": "Colombia"
+ },
+ {
+  "name": "Alianza Atlético",
+  "country": "Peru"
+ },
+ {
+  "name": "Alianza Lima",
+  "country": "Peru"
+ },
+ {
+  "name": "Alianza Universidad",
+  "country": "Peru"
+ },
+ {
+  "name": "Aluminium Arak",
+  "country": "Iran"
+ },
+ {
+  "name": "Always Ready",
+  "country": "Bolivia"
+ },
+ {
+  "name": "AmaZulu",
+  "country": "South Africa"
+ },
+ {
+  "name": "América",
+  "country": "Mexico"
+ },
+ {
+  "name": "América de Cali",
+  "country": "Colombia"
+ },
+ {
+  "name": "Angers SCO",
+  "country": "France"
+ },
+ {
+  "name": "Angostura",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Antalyaspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Antigua GFC",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Árabe Unido",
+  "country": "Panama"
+ },
+ {
+  "name": "Arema",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Argentinos Juniors",
+  "country": "Argentina"
+ },
+ {
+  "name": "Argeș Pitești",
+  "country": "Romania"
+ },
+ {
+  "name": "Aris",
+  "country": "Greece"
+ },
+ {
+  "name": "Arka Gdynia",
+  "country": "Poland"
+ },
+ {
+  "name": "Arnett Gardens",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Arsenal",
+  "country": "England"
+ },
+ {
+  "name": "AS Dauphins Noirs",
+  "country": "DR Congo"
+ },
+ {
+  "name": "AS FAR",
+  "country": "Morocco"
+ },
+ {
+  "name": "AS Fortuna",
+  "country": "Cameroon"
+ },
+ {
+  "name": "AS Gabes",
+  "country": "Tunisia"
+ },
+ {
+  "name": "AS Marsa",
+  "country": "Tunisia"
+ },
+ {
+  "name": "AS Monaco",
+  "country": "France"
+ },
+ {
+  "name": "AS Vita Club",
+  "country": "DR Congo"
+ },
+ {
+  "name": "Asante Kotoko",
+  "country": "Ghana"
+ },
+ {
+  "name": "ASO Chlef",
+  "country": "Algeria"
+ },
+ {
+  "name": "Asteras Tripolis",
+  "country": "Greece"
+ },
+ {
+  "name": "Aston Villa",
+  "country": "England"
+ },
+ {
+  "name": "Astres Douala",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Atalanta",
+  "country": "Italy"
+ },
+ {
+  "name": "Athletic Club",
+  "country": "Spain"
+ },
+ {
+  "name": "Atlanta United",
+  "country": "USA"
+ },
+ {
+  "name": "Atlas",
+  "country": "Mexico"
+ },
+ {
+  "name": "Atlético Bucaramanga",
+  "country": "Colombia"
+ },
+ {
+  "name": "Atlético Grau",
+  "country": "Peru"
+ },
+ {
+  "name": "Atlético Madrid",
+  "country": "Spain"
+ },
+ {
+  "name": "Atlético Mineiro",
+  "country": "Brazil"
+ },
+ {
+  "name": "Atlético Nacional",
+  "country": "Colombia"
+ },
+ {
+  "name": "Atlético Ottawa",
+  "country": "Canada"
+ },
+ {
+  "name": "Atlético San Luis",
+  "country": "Mexico"
+ },
+ {
+  "name": "Atlético Tucumán",
+  "country": "Argentina"
+ },
+ {
+  "name": "Atromitos",
+  "country": "Greece"
+ },
+ {
+  "name": "Aucas",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Auckland FC",
+  "country": "New Zealand"
+ },
+ {
+  "name": "Audax Italiano",
+  "country": "Chile"
+ },
+ {
+  "name": "Aurora",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Austin FC",
+  "country": "USA"
+ },
+ {
+  "name": "Austria Wien",
+  "country": "Austria"
+ },
+ {
+  "name": "Avenir Soliman",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Avion Academy",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Avispa Fukuoka",
+  "country": "Japan"
+ },
+ {
+  "name": "AVS Futebol SAD",
+  "country": "Portugal"
+ },
+ {
+  "name": "Ayutthaya United",
+  "country": "Thailand"
+ },
+ {
+  "name": "AZ Alkmaar",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Bahia",
+  "country": "Brazil"
+ },
+ {
+  "name": "Bala Town",
+  "country": "Wales"
+ },
+ {
+  "name": "Bali United",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Ballymena United",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Baltika Kaliningrad",
+  "country": "Russia"
+ },
+ {
+  "name": "Bamboutos Mbouda",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Bandari",
+  "country": "Kenya"
+ },
+ {
+  "name": "Banfield",
+  "country": "Argentina"
+ },
+ {
+  "name": "Bangkok United",
+  "country": "Thailand"
+ },
+ {
+  "name": "Bangor",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Baník Ostrava",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Baniyas",
+  "country": "UAE"
+ },
+ {
+  "name": "Barcelona SC",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Barracas Central",
+  "country": "Argentina"
+ },
+ {
+  "name": "Barry Town United",
+  "country": "Wales"
+ },
+ {
+  "name": "Basake Holy Stars",
+  "country": "Ghana"
+ },
+ {
+  "name": "Başakşehir",
+  "country": "Turkey"
+ },
+ {
+  "name": "Bayelsa United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Bayer Leverkusen",
+  "country": "Germany"
+ },
+ {
+  "name": "Bayern Munich",
+  "country": "Germany"
+ },
+ {
+  "name": "Bechem United",
+  "country": "Ghana"
+ },
+ {
+  "name": "Beijing Guoan",
+  "country": "China"
+ },
+ {
+  "name": "Beitar Jerusalem",
+  "country": "Israel"
+ },
+ {
+  "name": "Belgrano",
+  "country": "Argentina"
+ },
+ {
+  "name": "Bendel Insurance",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Bengaluru",
+  "country": "India"
+ },
+ {
+  "name": "Berekum Chelsea",
+  "country": "Ghana"
+ },
+ {
+  "name": "Beşiktaş",
+  "country": "Turkey"
+ },
+ {
+  "name": "BG Pathum United",
+  "country": "Thailand"
+ },
+ {
+  "name": "Bhayangkara",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Bibiani Gold Stars",
+  "country": "Ghana"
+ },
+ {
+  "name": "Bidco United",
+  "country": "Kenya"
+ },
+ {
+  "name": "BK Häcken",
+  "country": "Sweden"
+ },
+ {
+  "name": "Blau-Weiß Linz",
+  "country": "Austria"
+ },
+ {
+  "name": "Blooming",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Bnei Sakhnin",
+  "country": "Israel"
+ },
+ {
+  "name": "Boca Juniors",
+  "country": "Argentina"
+ },
+ {
+  "name": "Bodø/Glimt",
+  "country": "Norway"
+ },
+ {
+  "name": "Bohemians",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Bohemians 1905",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Bolívar",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Bologna",
+  "country": "Italy"
+ },
+ {
+  "name": "Borneo",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Borussia Dortmund",
+  "country": "Germany"
+ },
+ {
+  "name": "Borussia Mönchengladbach",
+  "country": "Germany"
+ },
+ {
+  "name": "Boston River",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Botafogo",
+  "country": "Brazil"
+ },
+ {
+  "name": "Botoșani",
+  "country": "Romania"
+ },
+ {
+  "name": "Bournemouth",
+  "country": "England"
+ },
+ {
+  "name": "Boyacá Chicó",
+  "country": "Colombia"
+ },
+ {
+  "name": "Brann",
+  "country": "Norway"
+ },
+ {
+  "name": "Brentford",
+  "country": "England"
+ },
+ {
+  "name": "Brighton & Hove Albion",
+  "country": "England"
+ },
+ {
+  "name": "Brisbane Roar",
+  "country": "Australia"
+ },
+ {
+  "name": "Briton Ferry Llansawel",
+  "country": "Wales"
+ },
+ {
+  "name": "Brøndby",
+  "country": "Denmark"
+ },
+ {
+  "name": "Bruk-Bet Termalica",
+  "country": "Poland"
+ },
+ {
+  "name": "BSC Young Boys",
+  "country": "Switzerland"
+ },
+ {
+  "name": "Bucheon FC 1995",
+  "country": "South Korea"
+ },
+ {
+  "name": "Buriram United",
+  "country": "Thailand"
+ },
+ {
+  "name": "Burnley",
+  "country": "England"
+ },
+ {
+  "name": "CA Bizertin",
+  "country": "Tunisia"
+ },
+ {
+  "name": "CA Osasuna",
+  "country": "Spain"
+ },
+ {
+  "name": "Cacahuatique",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Caernarfon Town",
+  "country": "Wales"
+ },
+ {
+  "name": "Cagliari",
+  "country": "Italy"
+ },
+ {
+  "name": "CAI",
+  "country": "Panama"
+ },
+ {
+  "name": "Canon Yaounde",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Cape Town City",
+  "country": "South Africa"
+ },
+ {
+  "name": "Carabobo",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Caracas FC",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Cardiff Metropolitan University",
+  "country": "Wales"
+ },
+ {
+  "name": "Carrick Rangers",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Cartaginés",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Casa Pia AC",
+  "country": "Portugal"
+ },
+ {
+  "name": "Cavalier",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Cavalry FC",
+  "country": "Canada"
+ },
+ {
+  "name": "CD Nacional",
+  "country": "Portugal"
+ },
+ {
+  "name": "CD Santa Clara",
+  "country": "Portugal"
+ },
+ {
+  "name": "CD Tondela",
+  "country": "Portugal"
+ },
+ {
+  "name": "Ceará",
+  "country": "Brazil"
+ },
+ {
+  "name": "Celtic",
+  "country": "Scotland"
+ },
+ {
+  "name": "Central Coast Mariners",
+  "country": "Australia"
+ },
+ {
+  "name": "Central Córdoba",
+  "country": "Argentina"
+ },
+ {
+  "name": "Ceramica Cleopatra",
+  "country": "Egypt"
+ },
+ {
+  "name": "Cercle Brugge",
+  "country": "Belgium"
+ },
+ {
+  "name": "Cerezo Osaka",
+  "country": "Japan"
+ },
+ {
+  "name": "Cerro",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Cerro Largo",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Cerro Porteño",
+  "country": "Paraguay"
+ },
+ {
+  "name": "CF Montréal",
+  "country": "Canada"
+ },
+ {
+  "name": "CFR Cluj",
+  "country": "Romania"
+ },
+ {
+  "name": "Chabab Mohammedia",
+  "country": "Morocco"
+ },
+ {
+  "name": "Chadormalu",
+  "country": "Iran"
+ },
+ {
+  "name": "Chapelton Maroons",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Charlotte FC",
+  "country": "USA"
+ },
+ {
+  "name": "Chelsea",
+  "country": "England"
+ },
+ {
+  "name": "Chengdu Rongcheng",
+  "country": "China"
+ },
+ {
+  "name": "Chennaiyin",
+  "country": "India"
+ },
+ {
+  "name": "Chiangrai United",
+  "country": "Thailand"
+ },
+ {
+  "name": "Chicago Fire",
+  "country": "USA"
+ },
+ {
+  "name": "Chippa United",
+  "country": "South Africa"
+ },
+ {
+  "name": "Choloma",
+  "country": "Honduras"
+ },
+ {
+  "name": "Chonburi",
+  "country": "Thailand"
+ },
+ {
+  "name": "Chongqing Tonglianglong",
+  "country": "China"
+ },
+ {
+  "name": "Cienciano",
+  "country": "Peru"
+ },
+ {
+  "name": "Cliftonville",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Club Africain",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Club Brugge",
+  "country": "Belgium"
+ },
+ {
+  "name": "Club San José",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Cobán Imperial",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Cobreloa",
+  "country": "Chile"
+ },
+ {
+  "name": "Coleraine",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Colo-Colo",
+  "country": "Chile"
+ },
+ {
+  "name": "Colombe Sportive",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Colón",
+  "country": "Argentina"
+ },
+ {
+  "name": "Colorado Rapids",
+  "country": "USA"
+ },
+ {
+  "name": "Columbus Crew",
+  "country": "USA"
+ },
+ {
+  "name": "Colwyn Bay",
+  "country": "Wales"
+ },
+ {
+  "name": "Comerciantes Unidos",
+  "country": "Peru"
+ },
+ {
+  "name": "Como",
+  "country": "Italy"
+ },
+ {
+  "name": "Comunicaciones",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Connah's Quay Nomads",
+  "country": "Wales"
+ },
+ {
+  "name": "Coquimbo Unido",
+  "country": "Chile"
+ },
+ {
+  "name": "Corinthians",
+  "country": "Brazil"
+ },
+ {
+  "name": "Coton Sport",
+  "country": "Cameroon"
+ },
+ {
+  "name": "CR Belouizdad",
+  "country": "Algeria"
+ },
+ {
+  "name": "Cracovia",
+  "country": "Poland"
+ },
+ {
+  "name": "Cremonese",
+  "country": "Italy"
+ },
+ {
+  "name": "Crusaders",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Cruz Azul",
+  "country": "Mexico"
+ },
+ {
+  "name": "Cruzeiro",
+  "country": "Brazil"
+ },
+ {
+  "name": "Crystal Palace",
+  "country": "England"
+ },
+ {
+  "name": "CS Constantine",
+  "country": "Algeria"
+ },
+ {
+  "name": "CS Sfaxien",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Csíkszereda",
+  "country": "Romania"
+ },
+ {
+  "name": "CSKA Moscow",
+  "country": "Russia"
+ },
+ {
+  "name": "Čukarički",
+  "country": "Serbia"
+ },
+ {
+  "name": "Cusco FC",
+  "country": "Peru"
+ },
+ {
+  "name": "D.C. United",
+  "country": "USA"
+ },
+ {
+  "name": "Daejeon Hana Citizen",
+  "country": "South Korea"
+ },
+ {
+  "name": "Dalian Yingbo",
+  "country": "China"
+ },
+ {
+  "name": "Damac",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "Danubio",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Daring Club Motema Pembe",
+  "country": "DR Congo"
+ },
+ {
+  "name": "Defensa y Justicia",
+  "country": "Argentina"
+ },
+ {
+  "name": "Defensor Sporting",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Degerfors IF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Delfín",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Deportes Iquique",
+  "country": "Chile"
+ },
+ {
+  "name": "Deportes La Serena",
+  "country": "Chile"
+ },
+ {
+  "name": "Deportes Limache",
+  "country": "Chile"
+ },
+ {
+  "name": "Deportes Tolima",
+  "country": "Colombia"
+ },
+ {
+  "name": "Deportivo Alavés",
+  "country": "Spain"
+ },
+ {
+  "name": "Deportivo Binacional",
+  "country": "Peru"
+ },
+ {
+  "name": "Deportivo Cali",
+  "country": "Colombia"
+ },
+ {
+  "name": "Deportivo Cuenca",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Deportivo Garcilaso",
+  "country": "Peru"
+ },
+ {
+  "name": "Deportivo La Guaira",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Deportivo Pasto",
+  "country": "Colombia"
+ },
+ {
+  "name": "Deportivo Pereira",
+  "country": "Colombia"
+ },
+ {
+  "name": "Deportivo Rayo Zuliano",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Deportivo Táchira",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Derry City",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Dewa United",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Dibba",
+  "country": "UAE"
+ },
+ {
+  "name": "Difaa El Jadida",
+  "country": "Morocco"
+ },
+ {
+  "name": "Dinamo București",
+  "country": "Romania"
+ },
+ {
+  "name": "Dinamo Zagreb",
+  "country": "Croatia"
+ },
+ {
+  "name": "Djurgårdens IF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Doma United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Dragon Yaounde",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Dreams FC",
+  "country": "Ghana"
+ },
+ {
+  "name": "Drogheda United",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Dukla Prague",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Dunbeholden",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Dundalk",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Dundee",
+  "country": "Scotland"
+ },
+ {
+  "name": "Dundee United",
+  "country": "Scotland"
+ },
+ {
+  "name": "Dungannon Swifts",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Dynamo Kyiv",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Dynamo Makhachkala",
+  "country": "Russia"
+ },
+ {
+  "name": "Dynamo Moscow",
+  "country": "Russia"
+ },
+ {
+  "name": "East Bengal",
+  "country": "India"
+ },
+ {
+  "name": "EGS Gafsa",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Eintracht Frankfurt",
+  "country": "Germany"
+ },
+ {
+  "name": "El Dakhleya",
+  "country": "Egypt"
+ },
+ {
+  "name": "El Gouna",
+  "country": "Egypt"
+ },
+ {
+  "name": "El Nacional",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Elche CF",
+  "country": "Spain"
+ },
+ {
+  "name": "Emelec",
+  "country": "Ecuador"
+ },
+ {
+  "name": "ENPPI",
+  "country": "Egypt"
+ },
+ {
+  "name": "Envigado",
+  "country": "Colombia"
+ },
+ {
+  "name": "Enyimba",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Epitsentr",
+  "country": "Ukraine"
+ },
+ {
+  "name": "ES Metlaoui",
+  "country": "Tunisia"
+ },
+ {
+  "name": "ES Mostaganem",
+  "country": "Algeria"
+ },
+ {
+  "name": "ES Setif",
+  "country": "Algeria"
+ },
+ {
+  "name": "ES Zarzis",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Esperance de Tunis",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Esteghlal",
+  "country": "Iran"
+ },
+ {
+  "name": "Esteghlal Khuzestan",
+  "country": "Iran"
+ },
+ {
+  "name": "Estoril Praia",
+  "country": "Portugal"
+ },
+ {
+  "name": "Estudiantes",
+  "country": "Argentina"
+ },
+ {
+  "name": "Estudiantes de Mérida",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Etoile du Sahel",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Everton",
+  "country": "England"
+ },
+ {
+  "name": "Excelsior",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Eyüpspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Fagiano Okayama",
+  "country": "Japan"
+ },
+ {
+  "name": "Fajr Sepasi",
+  "country": "Iran"
+ },
+ {
+  "name": "Falkirk",
+  "country": "Scotland"
+ },
+ {
+  "name": "Farul Constanța",
+  "country": "Romania"
+ },
+ {
+  "name": "FAS",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Fatih Karagümrük",
+  "country": "Turkey"
+ },
+ {
+  "name": "Fauve Azur Elite",
+  "country": "Cameroon"
+ },
+ {
+  "name": "FC Alverca",
+  "country": "Portugal"
+ },
+ {
+  "name": "FC Anyang",
+  "country": "South Korea"
+ },
+ {
+  "name": "FC Arouca",
+  "country": "Portugal"
+ },
+ {
+  "name": "FC Ashdod",
+  "country": "Israel"
+ },
+ {
+  "name": "FC Augsburg",
+  "country": "Germany"
+ },
+ {
+  "name": "FC Barcelona",
+  "country": "Spain"
+ },
+ {
+  "name": "FC Basel",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Cincinnati",
+  "country": "USA"
+ },
+ {
+  "name": "FC Copenhagen",
+  "country": "Denmark"
+ },
+ {
+  "name": "FC Dallas",
+  "country": "USA"
+ },
+ {
+  "name": "FC Famalicão",
+  "country": "Portugal"
+ },
+ {
+  "name": "FC Goa",
+  "country": "India"
+ },
+ {
+  "name": "FC Groningen",
+  "country": "Netherlands"
+ },
+ {
+  "name": "FC Inter",
+  "country": "Finland"
+ },
+ {
+  "name": "FC Juárez",
+  "country": "Mexico"
+ },
+ {
+  "name": "FC Lahti",
+  "country": "Finland"
+ },
+ {
+  "name": "FC Lausanne-Sport",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Les Aigles du Congo",
+  "country": "DR Congo"
+ },
+ {
+  "name": "FC Lorient",
+  "country": "France"
+ },
+ {
+  "name": "FC Lubumbashi Sport",
+  "country": "DR Congo"
+ },
+ {
+  "name": "FC Lugano",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Luzern",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Metz",
+  "country": "France"
+ },
+ {
+  "name": "FC Nantes",
+  "country": "France"
+ },
+ {
+  "name": "FC Porto",
+  "country": "Portugal"
+ },
+ {
+  "name": "FC Saint Eloi Lupopo",
+  "country": "DR Congo"
+ },
+ {
+  "name": "FC Seoul",
+  "country": "South Korea"
+ },
+ {
+  "name": "FC Simba",
+  "country": "DR Congo"
+ },
+ {
+  "name": "FC Sion",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC St. Gallen",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC St. Pauli",
+  "country": "Germany"
+ },
+ {
+  "name": "FC Thun",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Tokyo",
+  "country": "Japan"
+ },
+ {
+  "name": "FC Twente",
+  "country": "Netherlands"
+ },
+ {
+  "name": "FC Universitario",
+  "country": "Bolivia"
+ },
+ {
+  "name": "FC Utrecht",
+  "country": "Netherlands"
+ },
+ {
+  "name": "FC Volendam",
+  "country": "Netherlands"
+ },
+ {
+  "name": "FC Winterthur",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FC Zürich",
+  "country": "Switzerland"
+ },
+ {
+  "name": "FCSB",
+  "country": "Romania"
+ },
+ {
+  "name": "FCV Dender EH",
+  "country": "Belgium"
+ },
+ {
+  "name": "Fenerbahçe",
+  "country": "Turkey"
+ },
+ {
+  "name": "Feyenoord",
+  "country": "Netherlands"
+ },
+ {
+  "name": "FF Jaro",
+  "country": "Finland"
+ },
+ {
+  "name": "Fiorentina",
+  "country": "Italy"
+ },
+ {
+  "name": "Fírpo Usulután",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Flamengo",
+  "country": "Brazil"
+ },
+ {
+  "name": "Flint Town United",
+  "country": "Wales"
+ },
+ {
+  "name": "Fluminense",
+  "country": "Brazil"
+ },
+ {
+  "name": "Foolad",
+  "country": "Iran"
+ },
+ {
+  "name": "Forge FC",
+  "country": "Canada"
+ },
+ {
+  "name": "Fortaleza",
+  "country": "Brazil"
+ },
+ {
+  "name": "Fortaleza CEIF",
+  "country": "Colombia"
+ },
+ {
+  "name": "Fortuna Mfou",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Fortuna Sittard",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Fredericia",
+  "country": "Denmark"
+ },
+ {
+  "name": "Fredrikstad",
+  "country": "Norway"
+ },
+ {
+  "name": "Fulham",
+  "country": "England"
+ },
+ {
+  "name": "FUS Rabat",
+  "country": "Morocco"
+ },
+ {
+  "name": "GAIS",
+  "country": "Sweden"
+ },
+ {
+  "name": "Galatasaray",
+  "country": "Turkey"
+ },
+ {
+  "name": "Galway United",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Gamba Osaka",
+  "country": "Japan"
+ },
+ {
+  "name": "Gangwon FC",
+  "country": "South Korea"
+ },
+ {
+  "name": "Gazelle FA",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Gaziantep",
+  "country": "Turkey"
+ },
+ {
+  "name": "GD Estrela da Amadora",
+  "country": "Portugal"
+ },
+ {
+  "name": "Gençlerbirliği",
+  "country": "Turkey"
+ },
+ {
+  "name": "General Caballero JLM",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Génesis",
+  "country": "Honduras"
+ },
+ {
+  "name": "Genoa",
+  "country": "Italy"
+ },
+ {
+  "name": "Getafe CF",
+  "country": "Spain"
+ },
+ {
+  "name": "Gil Vicente FC",
+  "country": "Portugal"
+ },
+ {
+  "name": "Gimcheon Sangmu",
+  "country": "South Korea"
+ },
+ {
+  "name": "Gimnasia La Plata",
+  "country": "Argentina"
+ },
+ {
+  "name": "Girona FC",
+  "country": "Spain"
+ },
+ {
+  "name": "GKS Katowice",
+  "country": "Poland"
+ },
+ {
+  "name": "Glenavon",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Glentoran",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Go Ahead Eagles",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Godoy Cruz",
+  "country": "Argentina"
+ },
+ {
+  "name": "Gol Gohar",
+  "country": "Iran"
+ },
+ {
+  "name": "Golden Arrows",
+  "country": "South Africa"
+ },
+ {
+  "name": "Gombe United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Gor Mahia",
+  "country": "Kenya"
+ },
+ {
+  "name": "Gor Mahia Youth",
+  "country": "Kenya"
+ },
+ {
+  "name": "Gorica",
+  "country": "Croatia"
+ },
+ {
+  "name": "Górnik Zabrze",
+  "country": "Poland"
+ },
+ {
+  "name": "Göztepe",
+  "country": "Turkey"
+ },
+ {
+  "name": "Grasshopper Club Zurich",
+  "country": "Switzerland"
+ },
+ {
+  "name": "Grazer AK",
+  "country": "Austria"
+ },
+ {
+  "name": "Grecia",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Grêmio",
+  "country": "Brazil"
+ },
+ {
+  "name": "Guabirá",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Guadalajara",
+  "country": "Mexico"
+ },
+ {
+  "name": "Guadalupe FC",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Guaraní",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Guastatoya",
+  "country": "Guatemala"
+ },
+ {
+  "name": "GV San José",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Gwangju FC",
+  "country": "South Korea"
+ },
+ {
+  "name": "Hajduk Split",
+  "country": "Croatia"
+ },
+ {
+  "name": "Halmstads BK",
+  "country": "Sweden"
+ },
+ {
+  "name": "Hamburger SV",
+  "country": "Germany"
+ },
+ {
+  "name": "HamKam",
+  "country": "Norway"
+ },
+ {
+  "name": "Hammarby IF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Hapoel Beer Sheva",
+  "country": "Israel"
+ },
+ {
+  "name": "Hapoel Hadera",
+  "country": "Israel"
+ },
+ {
+  "name": "Hapoel Haifa",
+  "country": "Israel"
+ },
+ {
+  "name": "Hapoel Petah Tikva",
+  "country": "Israel"
+ },
+ {
+  "name": "Hapoel Tel Aviv",
+  "country": "Israel"
+ },
+ {
+  "name": "Haras El Hodood",
+  "country": "Egypt"
+ },
+ {
+  "name": "Harbour View",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Hassania Agadir",
+  "country": "Morocco"
+ },
+ {
+  "name": "Haverfordwest County",
+  "country": "Wales"
+ },
+ {
+  "name": "Heart of Lions",
+  "country": "Ghana"
+ },
+ {
+  "name": "Heart of Midlothian",
+  "country": "Scotland"
+ },
+ {
+  "name": "Heartland",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Hearts of Oak",
+  "country": "Ghana"
+ },
+ {
+  "name": "Henan",
+  "country": "China"
+ },
+ {
+  "name": "Heracles Almelo",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Herediano",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Hermannstadt",
+  "country": "Romania"
+ },
+ {
+  "name": "Herrera FC",
+  "country": "Panama"
+ },
+ {
+  "name": "HFX Wanderers",
+  "country": "Canada"
+ },
+ {
+  "name": "Hibernian",
+  "country": "Scotland"
+ },
+ {
+  "name": "HJK",
+  "country": "Finland"
+ },
+ {
+  "name": "Houston Dynamo",
+  "country": "USA"
+ },
+ {
+  "name": "Hradec Králové",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Huachipato",
+  "country": "Chile"
+ },
+ {
+  "name": "Huracán",
+  "country": "Argentina"
+ },
+ {
+  "name": "IF Brommapojkarna",
+  "country": "Sweden"
+ },
+ {
+  "name": "IF Elfsborg",
+  "country": "Sweden"
+ },
+ {
+  "name": "IF Gnistan",
+  "country": "Finland"
+ },
+ {
+  "name": "IFK Göteborg",
+  "country": "Sweden"
+ },
+ {
+  "name": "IFK Mariehamn",
+  "country": "Finland"
+ },
+ {
+  "name": "IK Sirius",
+  "country": "Sweden"
+ },
+ {
+  "name": "Ilves",
+  "country": "Finland"
+ },
+ {
+  "name": "IMT",
+  "country": "Serbia"
+ },
+ {
+  "name": "Incheon United",
+  "country": "South Korea"
+ },
+ {
+  "name": "Independiente",
+  "country": "Argentina"
+ },
+ {
+  "name": "Independiente del Valle",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Independiente Medellín",
+  "country": "Colombia"
+ },
+ {
+  "name": "Independiente Petrolero",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Independiente Rivadavia",
+  "country": "Argentina"
+ },
+ {
+  "name": "Instituto",
+  "country": "Argentina"
+ },
+ {
+  "name": "Inter",
+  "country": "Italy"
+ },
+ {
+  "name": "Inter Kashi",
+  "country": "India"
+ },
+ {
+  "name": "Inter Miami",
+  "country": "USA"
+ },
+ {
+  "name": "Internacional",
+  "country": "Brazil"
+ },
+ {
+  "name": "Ironi Tiberias",
+  "country": "Israel"
+ },
+ {
+  "name": "Isidro Metapán",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Ismaily",
+  "country": "Egypt"
+ },
+ {
+  "name": "Istra 1961",
+  "country": "Croatia"
+ },
+ {
+  "name": "Ittihad Tanger",
+  "country": "Morocco"
+ },
+ {
+  "name": "Jablonec",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Jagiellonia Białystok",
+  "country": "Poland"
+ },
+ {
+  "name": "Jamshedpur",
+  "country": "India"
+ },
+ {
+  "name": "Javor-Matis",
+  "country": "Serbia"
+ },
+ {
+  "name": "Jeju SK",
+  "country": "South Korea"
+ },
+ {
+  "name": "Jeonbuk Hyundai Motors",
+  "country": "South Korea"
+ },
+ {
+  "name": "Jocoro",
+  "country": "El Salvador"
+ },
+ {
+  "name": "JS Groupe Bazano",
+  "country": "DR Congo"
+ },
+ {
+  "name": "JS Kabylie",
+  "country": "Algeria"
+ },
+ {
+  "name": "JS Kairouan",
+  "country": "Tunisia"
+ },
+ {
+  "name": "JS Saoura",
+  "country": "Algeria"
+ },
+ {
+  "name": "Juan Pablo II College",
+  "country": "Peru"
+ },
+ {
+  "name": "Junior",
+  "country": "Colombia"
+ },
+ {
+  "name": "Juventud de Las Piedras",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Juventude",
+  "country": "Brazil"
+ },
+ {
+  "name": "Juventus",
+  "country": "Italy"
+ },
+ {
+  "name": "KAA Gent",
+  "country": "Belgium"
+ },
+ {
+  "name": "KAC Kenitra",
+  "country": "Morocco"
+ },
+ {
+  "name": "Kaizer Chiefs",
+  "country": "South Africa"
+ },
+ {
+  "name": "Kakamega Homeboyz",
+  "country": "Kenya"
+ },
+ {
+  "name": "Kalba",
+  "country": "UAE"
+ },
+ {
+  "name": "Kalmar FF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Kanchanaburi Power",
+  "country": "Thailand"
+ },
+ {
+  "name": "Kano Pillars",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Karela United",
+  "country": "Ghana"
+ },
+ {
+  "name": "Kariobangi Sharks",
+  "country": "Kenya"
+ },
+ {
+  "name": "Karpaty Lviv",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Karviná",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Kashima Antlers",
+  "country": "Japan"
+ },
+ {
+  "name": "Kashiwa Reysol",
+  "country": "Japan"
+ },
+ {
+  "name": "Kasımpaşa",
+  "country": "Turkey"
+ },
+ {
+  "name": "Katsina United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Kawasaki Frontale",
+  "country": "Japan"
+ },
+ {
+  "name": "Kayserispor",
+  "country": "Turkey"
+ },
+ {
+  "name": "KCB",
+  "country": "Kenya"
+ },
+ {
+  "name": "Kenya Police",
+  "country": "Kenya"
+ },
+ {
+  "name": "Kerala Blasters",
+  "country": "India"
+ },
+ {
+  "name": "KFUM",
+  "country": "Norway"
+ },
+ {
+  "name": "Kheybar",
+  "country": "Iran"
+ },
+ {
+  "name": "Khor Fakkan",
+  "country": "UAE"
+ },
+ {
+  "name": "Kilmarnock",
+  "country": "Scotland"
+ },
+ {
+  "name": "Kocaelispor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Kolos Kovalivka",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Konyaspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Korona Kielce",
+  "country": "Poland"
+ },
+ {
+  "name": "Krasnodar",
+  "country": "Russia"
+ },
+ {
+  "name": "KRC Genk",
+  "country": "Belgium"
+ },
+ {
+  "name": "Kristiansund",
+  "country": "Norway"
+ },
+ {
+  "name": "Krylia Sovetov",
+  "country": "Russia"
+ },
+ {
+  "name": "Kryvbas Kryvyi Rih",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Kudrivka",
+  "country": "Ukraine"
+ },
+ {
+  "name": "KuPS",
+  "country": "Finland"
+ },
+ {
+  "name": "KV Mechelen",
+  "country": "Belgium"
+ },
+ {
+  "name": "KVC Westerlo",
+  "country": "Belgium"
+ },
+ {
+  "name": "Kwara United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Kyoto Sanga",
+  "country": "Japan"
+ },
+ {
+  "name": "La Equidad",
+  "country": "Colombia"
+ },
+ {
+  "name": "LA Galaxy",
+  "country": "USA"
+ },
+ {
+  "name": "Lamphun Warriors",
+  "country": "Thailand"
+ },
+ {
+  "name": "Lanús",
+  "country": "Argentina"
+ },
+ {
+  "name": "Larne",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "LASK",
+  "country": "Austria"
+ },
+ {
+  "name": "Lazio",
+  "country": "Italy"
+ },
+ {
+  "name": "LDU Quito",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Le Havre AC",
+  "country": "France"
+ },
+ {
+  "name": "Lecce",
+  "country": "Italy"
+ },
+ {
+  "name": "Lech Poznań",
+  "country": "Poland"
+ },
+ {
+  "name": "Lechia Gdańsk",
+  "country": "Poland"
+ },
+ {
+  "name": "Leeds United",
+  "country": "England"
+ },
+ {
+  "name": "Legia Warsaw",
+  "country": "Poland"
+ },
+ {
+  "name": "Legon Cities",
+  "country": "Ghana"
+ },
+ {
+  "name": "León",
+  "country": "Mexico"
+ },
+ {
+  "name": "Levadiakos",
+  "country": "Greece"
+ },
+ {
+  "name": "Levante UD",
+  "country": "Spain"
+ },
+ {
+  "name": "Liaoning Tieren",
+  "country": "China"
+ },
+ {
+  "name": "Liberia",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Libertad",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Libertad FC",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Lillestrøm",
+  "country": "Norway"
+ },
+ {
+  "name": "Linfield",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Liverpool",
+  "country": "England"
+ },
+ {
+  "name": "Liverpool Montevideo",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Livingston",
+  "country": "Scotland"
+ },
+ {
+  "name": "Llanelli Town",
+  "country": "Wales"
+ },
+ {
+  "name": "Llaneros",
+  "country": "Colombia"
+ },
+ {
+  "name": "LNZ Cherkasy",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Lobi Stars",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Lobos UPNFM",
+  "country": "Honduras"
+ },
+ {
+  "name": "Lokomotiv Moscow",
+  "country": "Russia"
+ },
+ {
+  "name": "Lokomotiva",
+  "country": "Croatia"
+ },
+ {
+  "name": "Los Angeles FC",
+  "country": "USA"
+ },
+ {
+  "name": "Los Chankas",
+  "country": "Peru"
+ },
+ {
+  "name": "LOSC Lille",
+  "country": "France"
+ },
+ {
+  "name": "Luis Ángel Firpo",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Macará",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Macarthur FC",
+  "country": "Australia"
+ },
+ {
+  "name": "Maccabi Bnei Reineh",
+  "country": "Israel"
+ },
+ {
+  "name": "Maccabi Haifa",
+  "country": "Israel"
+ },
+ {
+  "name": "Maccabi Netanya",
+  "country": "Israel"
+ },
+ {
+  "name": "Maccabi Petah Tikva",
+  "country": "Israel"
+ },
+ {
+  "name": "Maccabi Tel Aviv",
+  "country": "Israel"
+ },
+ {
+  "name": "Machida Zelvia",
+  "country": "Japan"
+ },
+ {
+  "name": "Madura United",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Magesi FC",
+  "country": "South Africa"
+ },
+ {
+  "name": "Maghreb de Fes",
+  "country": "Morocco"
+ },
+ {
+  "name": "Mainz 05",
+  "country": "Germany"
+ },
+ {
+  "name": "Malacateco",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Malavan",
+  "country": "Iran"
+ },
+ {
+  "name": "Malmö FF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Malut United",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Mamelodi Sundowns",
+  "country": "South Africa"
+ },
+ {
+  "name": "Manchester City",
+  "country": "England"
+ },
+ {
+  "name": "Manchester United",
+  "country": "England"
+ },
+ {
+  "name": "Maniema Union",
+  "country": "DR Congo"
+ },
+ {
+  "name": "Manta FC",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Mara Sugar",
+  "country": "Kenya"
+ },
+ {
+  "name": "Marathón",
+  "country": "Honduras"
+ },
+ {
+  "name": "Marquense",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Marumo Gallants",
+  "country": "South Africa"
+ },
+ {
+  "name": "Mazatlán",
+  "country": "Mexico"
+ },
+ {
+  "name": "MC Alger",
+  "country": "Algeria"
+ },
+ {
+  "name": "MC El Bayadh",
+  "country": "Algeria"
+ },
+ {
+  "name": "MC Oran",
+  "country": "Algeria"
+ },
+ {
+  "name": "MC Oujda",
+  "country": "Morocco"
+ },
+ {
+  "name": "Medeama SC",
+  "country": "Ghana"
+ },
+ {
+  "name": "Melbourne City",
+  "country": "Australia"
+ },
+ {
+  "name": "Melbourne Victory",
+  "country": "Australia"
+ },
+ {
+  "name": "Melgar",
+  "country": "Peru"
+ },
+ {
+  "name": "Mes Rafsanjan",
+  "country": "Iran"
+ },
+ {
+  "name": "Metalist 1925 Kharkiv",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Metaloglobus București",
+  "country": "Romania"
+ },
+ {
+  "name": "Metropolitanos",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Mictlán",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Midtjylland",
+  "country": "Denmark"
+ },
+ {
+  "name": "Milan",
+  "country": "Italy"
+ },
+ {
+  "name": "Millonarios",
+  "country": "Colombia"
+ },
+ {
+  "name": "Minnesota United",
+  "country": "USA"
+ },
+ {
+  "name": "Miramar Misiones",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Mirassol",
+  "country": "Brazil"
+ },
+ {
+  "name": "Mixco",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Mjällby AIF",
+  "country": "Sweden"
+ },
+ {
+  "name": "Mladá Boleslav",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Mladost Lučani",
+  "country": "Serbia"
+ },
+ {
+  "name": "Modern Future FC",
+  "country": "Egypt"
+ },
+ {
+  "name": "Mohammedan",
+  "country": "India"
+ },
+ {
+  "name": "Mohun Bagan",
+  "country": "India"
+ },
+ {
+  "name": "Molde",
+  "country": "Norway"
+ },
+ {
+  "name": "Molynes United",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Monagas",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Montego Bay United",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Monterrey",
+  "country": "Mexico"
+ },
+ {
+  "name": "Montevideo City Torque",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Moreirense FC",
+  "country": "Portugal"
+ },
+ {
+  "name": "Motagua",
+  "country": "Honduras"
+ },
+ {
+  "name": "Motherwell",
+  "country": "Scotland"
+ },
+ {
+  "name": "Motor Lublin",
+  "country": "Poland"
+ },
+ {
+  "name": "Mount Pleasant",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Muangthong United",
+  "country": "Thailand"
+ },
+ {
+  "name": "Mumbai City",
+  "country": "India"
+ },
+ {
+  "name": "Municipal",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Municipal Limeño",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Murang'a Seal",
+  "country": "Kenya"
+ },
+ {
+  "name": "Mushuc Runa",
+  "country": "Ecuador"
+ },
+ {
+  "name": "NAC Breda",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Nacional",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Nacional Asunción",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Nacional Potosí",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Nagoya Grampus",
+  "country": "Japan"
+ },
+ {
+  "name": "Nairobi City Stars",
+  "country": "Kenya"
+ },
+ {
+  "name": "Nakhon Ratchasima",
+  "country": "Thailand"
+ },
+ {
+  "name": "Napoli",
+  "country": "Italy"
+ },
+ {
+  "name": "Napredak",
+  "country": "Serbia"
+ },
+ {
+  "name": "Nasarawa United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Nashville SC",
+  "country": "USA"
+ },
+ {
+  "name": "National Bank of Egypt",
+  "country": "Egypt"
+ },
+ {
+  "name": "Nations FC",
+  "country": "Ghana"
+ },
+ {
+  "name": "NC Magra",
+  "country": "Algeria"
+ },
+ {
+  "name": "NEC Nijmegen",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Necaxa",
+  "country": "Mexico"
+ },
+ {
+  "name": "Neom",
+  "country": "Saudi Arabia"
+ },
+ {
+  "name": "New England Revolution",
+  "country": "USA"
+ },
+ {
+  "name": "New York City FC",
+  "country": "USA"
+ },
+ {
+  "name": "New York Red Bulls",
+  "country": "USA"
+ },
+ {
+  "name": "Newcastle Jets",
+  "country": "Australia"
+ },
+ {
+  "name": "Newcastle United",
+  "country": "England"
+ },
+ {
+  "name": "Newell's Old Boys",
+  "country": "Argentina"
+ },
+ {
+  "name": "Niger Tornadoes",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Nordsjælland",
+  "country": "Denmark"
+ },
+ {
+  "name": "NorthEast United",
+  "country": "India"
+ },
+ {
+  "name": "Nottingham Forest",
+  "country": "England"
+ },
+ {
+  "name": "Novi Pazar",
+  "country": "Serbia"
+ },
+ {
+  "name": "Nsoatreman",
+  "country": "Ghana"
+ },
+ {
+  "name": "Ñublense",
+  "country": "Chile"
+ },
+ {
+  "name": "O'Higgins",
+  "country": "Chile"
+ },
+ {
+  "name": "OB",
+  "country": "Denmark"
+ },
+ {
+  "name": "Obolon Kyiv",
+  "country": "Ukraine"
+ },
+ {
+  "name": "OC Bukavu Dawa",
+  "country": "DR Congo"
+ },
+ {
+  "name": "Odisha",
+  "country": "India"
+ },
+ {
+  "name": "OFI",
+  "country": "Greece"
+ },
+ {
+  "name": "OFK Beograd",
+  "country": "Serbia"
+ },
+ {
+  "name": "OGC Nice",
+  "country": "France"
+ },
+ {
+  "name": "OH Leuven",
+  "country": "Belgium"
+ },
+ {
+  "name": "Olancho FC",
+  "country": "Honduras"
+ },
+ {
+  "name": "Oleksandriya",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Olimpia",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Olympiacos",
+  "country": "Greece"
+ },
+ {
+  "name": "Olympic Safi",
+  "country": "Morocco"
+ },
+ {
+  "name": "Olympique Akbou",
+  "country": "Algeria"
+ },
+ {
+  "name": "Olympique Beja",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Olympique de Marseille",
+  "country": "France"
+ },
+ {
+  "name": "Olympique Khouribga",
+  "country": "Morocco"
+ },
+ {
+  "name": "Olympique Lyonnais",
+  "country": "France"
+ },
+ {
+  "name": "Once Caldas",
+  "country": "Colombia"
+ },
+ {
+  "name": "Once Deportivo",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Orenburg",
+  "country": "Russia"
+ },
+ {
+  "name": "Orense",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Örgryte IS",
+  "country": "Sweden"
+ },
+ {
+  "name": "Oriente Petrolero",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Orlando City",
+  "country": "USA"
+ },
+ {
+  "name": "Orlando Pirates",
+  "country": "South Africa"
+ },
+ {
+  "name": "Osijek",
+  "country": "Croatia"
+ },
+ {
+  "name": "Oțelul Galați",
+  "country": "Romania"
+ },
+ {
+  "name": "Pachuca",
+  "country": "Mexico"
+ },
+ {
+  "name": "Pacific FC",
+  "country": "Canada"
+ },
+ {
+  "name": "Palestino",
+  "country": "Chile"
+ },
+ {
+  "name": "Palmeiras",
+  "country": "Brazil"
+ },
+ {
+  "name": "Panathinaikos",
+  "country": "Greece"
+ },
+ {
+  "name": "Panetolikos",
+  "country": "Greece"
+ },
+ {
+  "name": "Panserraikos",
+  "country": "Greece"
+ },
+ {
+  "name": "PAOK",
+  "country": "Greece"
+ },
+ {
+  "name": "Paradou AC",
+  "country": "Algeria"
+ },
+ {
+  "name": "Pardubice",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Pari Nizhny Novgorod",
+  "country": "Russia"
+ },
+ {
+  "name": "Paris FC",
+  "country": "France"
+ },
+ {
+  "name": "Paris Saint-Germain",
+  "country": "France"
+ },
+ {
+  "name": "Parma",
+  "country": "Italy"
+ },
+ {
+  "name": "Partizan",
+  "country": "Serbia"
+ },
+ {
+  "name": "Patriotas",
+  "country": "Colombia"
+ },
+ {
+  "name": "Paykan",
+  "country": "Iran"
+ },
+ {
+  "name": "PEC Zwolle",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Peñarol",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Penybont",
+  "country": "Wales"
+ },
+ {
+  "name": "Pérez Zeledón",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Persebaya Surabaya",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persepolis",
+  "country": "Iran"
+ },
+ {
+  "name": "Persib",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persija",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persijap",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persik Kediri",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persis Solo",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Persita",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Perth Glory",
+  "country": "Australia"
+ },
+ {
+  "name": "Petrojet",
+  "country": "Egypt"
+ },
+ {
+  "name": "Petrolul Ploiești",
+  "country": "Romania"
+ },
+ {
+  "name": "Pharco",
+  "country": "Egypt"
+ },
+ {
+  "name": "Philadelphia Union",
+  "country": "USA"
+ },
+ {
+  "name": "Piast Gliwice",
+  "country": "Poland"
+ },
+ {
+  "name": "Pisa",
+  "country": "Italy"
+ },
+ {
+  "name": "Plateau United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Platense",
+  "country": "Argentina"
+ },
+ {
+  "name": "Plaza Amador",
+  "country": "Panama"
+ },
+ {
+  "name": "Plaza Colonia",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Pogoń Szczecin",
+  "country": "Poland"
+ },
+ {
+  "name": "Pohang Steelers",
+  "country": "South Korea"
+ },
+ {
+  "name": "Polissya Zhytomyr",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Polokwane City",
+  "country": "South Africa"
+ },
+ {
+  "name": "Port",
+  "country": "Thailand"
+ },
+ {
+  "name": "Portadown",
+  "country": "Northern Ireland"
+ },
+ {
+  "name": "Portland Timbers",
+  "country": "USA"
+ },
+ {
+  "name": "Portmore United",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Posta Rangers",
+  "country": "Kenya"
+ },
+ {
+  "name": "Progreso",
+  "country": "Uruguay"
+ },
+ {
+  "name": "PSBS Biak",
+  "country": "Indonesia"
+ },
+ {
+  "name": "PSIM Yogyakarta",
+  "country": "Indonesia"
+ },
+ {
+  "name": "PSM Makassar",
+  "country": "Indonesia"
+ },
+ {
+  "name": "PSV Eindhoven",
+  "country": "Netherlands"
+ },
+ {
+  "name": "PT Prachuap",
+  "country": "Thailand"
+ },
+ {
+  "name": "Puebla",
+  "country": "Mexico"
+ },
+ {
+  "name": "Pumas UNAM",
+  "country": "Mexico"
+ },
+ {
+  "name": "Punjab",
+  "country": "India"
+ },
+ {
+  "name": "Puntarenas FC",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "PWD Bamenda",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Pyramids FC",
+  "country": "Egypt"
+ },
+ {
+  "name": "Qatar SC",
+  "country": "Qatar"
+ },
+ {
+  "name": "Qingdao Hainiu",
+  "country": "China"
+ },
+ {
+  "name": "Qingdao West Coast",
+  "country": "China"
+ },
+ {
+  "name": "Querétaro",
+  "country": "Mexico"
+ },
+ {
+  "name": "RAAL La Louvière",
+  "country": "Belgium"
+ },
+ {
+  "name": "Racing Club",
+  "country": "Argentina"
+ },
+ {
+  "name": "Racing Montevideo",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Radnički 1923",
+  "country": "Serbia"
+ },
+ {
+  "name": "Radnički Niš",
+  "country": "Serbia"
+ },
+ {
+  "name": "Radnik Surdulica",
+  "country": "Serbia"
+ },
+ {
+  "name": "Radomiak Radom",
+  "country": "Poland"
+ },
+ {
+  "name": "Raja Casablanca",
+  "country": "Morocco"
+ },
+ {
+  "name": "Raków Częstochowa",
+  "country": "Poland"
+ },
+ {
+  "name": "Randers",
+  "country": "Denmark"
+ },
+ {
+  "name": "Rangers",
+  "country": "Scotland"
+ },
+ {
+  "name": "Rangers International",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Rapid București",
+  "country": "Romania"
+ },
+ {
+  "name": "Ratchaburi",
+  "country": "Thailand"
+ },
+ {
+  "name": "Rayo Vallecano",
+  "country": "Spain"
+ },
+ {
+  "name": "Rayong",
+  "country": "Thailand"
+ },
+ {
+  "name": "RB Leipzig",
+  "country": "Germany"
+ },
+ {
+  "name": "RC Celta de Vigo",
+  "country": "Spain"
+ },
+ {
+  "name": "RC Kinshasa",
+  "country": "DR Congo"
+ },
+ {
+  "name": "RC Lens",
+  "country": "France"
+ },
+ {
+  "name": "RC Strasbourg Alsace",
+  "country": "France"
+ },
+ {
+  "name": "RCD Espanyol",
+  "country": "Spain"
+ },
+ {
+  "name": "RCD Mallorca",
+  "country": "Spain"
+ },
+ {
+  "name": "Real Betis",
+  "country": "Spain"
+ },
+ {
+  "name": "Real España",
+  "country": "Honduras"
+ },
+ {
+  "name": "Real Madrid",
+  "country": "Spain"
+ },
+ {
+  "name": "Real Oruro",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Real Oviedo",
+  "country": "Spain"
+ },
+ {
+  "name": "Real Salt Lake",
+  "country": "USA"
+ },
+ {
+  "name": "Real Sociedad",
+  "country": "Spain"
+ },
+ {
+  "name": "Real Tomayapo",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Recoleta",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Red Bull Bragantino",
+  "country": "Brazil"
+ },
+ {
+  "name": "Red Bull Salzburg",
+  "country": "Austria"
+ },
+ {
+  "name": "Red Star Belgrade",
+  "country": "Serbia"
+ },
+ {
+  "name": "Remo Stars",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Renaissance Berkane B",
+  "country": "Morocco"
+ },
+ {
+  "name": "Richards Bay",
+  "country": "South Africa"
+ },
+ {
+  "name": "Rijeka",
+  "country": "Croatia"
+ },
+ {
+  "name": "Rio Ave FC",
+  "country": "Portugal"
+ },
+ {
+  "name": "River Plate",
+  "country": "Argentina"
+ },
+ {
+  "name": "River Plate Montevideo",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Rivers United",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Rizespor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Roma",
+  "country": "Italy"
+ },
+ {
+  "name": "Rosario Central",
+  "country": "Argentina"
+ },
+ {
+  "name": "Rosenborg",
+  "country": "Norway"
+ },
+ {
+  "name": "Rostov",
+  "country": "Russia"
+ },
+ {
+  "name": "Royal AM",
+  "country": "South Africa"
+ },
+ {
+  "name": "Royal Antwerp FC",
+  "country": "Belgium"
+ },
+ {
+  "name": "RS Berkane",
+  "country": "Morocco"
+ },
+ {
+  "name": "RSC Anderlecht",
+  "country": "Belgium"
+ },
+ {
+  "name": "Rubin Kazan",
+  "country": "Russia"
+ },
+ {
+  "name": "Rukh Lviv",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Samartex",
+  "country": "Ghana"
+ },
+ {
+  "name": "Samsunspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "San Antonio Bulo Bulo",
+  "country": "Bolivia"
+ },
+ {
+  "name": "San Carlos",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "San Diego FC",
+  "country": "USA"
+ },
+ {
+  "name": "San Francisco",
+  "country": "Panama"
+ },
+ {
+  "name": "San Jose Earthquakes",
+  "country": "USA"
+ },
+ {
+  "name": "San Lorenzo",
+  "country": "Argentina"
+ },
+ {
+  "name": "San Martín San Juan",
+  "country": "Argentina"
+ },
+ {
+  "name": "Sandefjord",
+  "country": "Norway"
+ },
+ {
+  "name": "Sanfrecce Hiroshima",
+  "country": "Japan"
+ },
+ {
+  "name": "Santa Ana",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Santa Fe",
+  "country": "Colombia"
+ },
+ {
+  "name": "Santa Tecla",
+  "country": "El Salvador"
+ },
+ {
+  "name": "Santos",
+  "country": "Brazil"
+ },
+ {
+  "name": "Santos Laguna",
+  "country": "Mexico"
+ },
+ {
+  "name": "São Paulo",
+  "country": "Brazil"
+ },
+ {
+  "name": "Saprissa",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Sarmiento",
+  "country": "Argentina"
+ },
+ {
+  "name": "Sarpsborg",
+  "country": "Norway"
+ },
+ {
+  "name": "Sassuolo",
+  "country": "Italy"
+ },
+ {
+  "name": "SC Braga",
+  "country": "Portugal"
+ },
+ {
+  "name": "SC Delhi",
+  "country": "India"
+ },
+ {
+  "name": "SC Freiburg",
+  "country": "Germany"
+ },
+ {
+  "name": "SC Heerenveen",
+  "country": "Netherlands"
+ },
+ {
+  "name": "SC Poltava",
+  "country": "Ukraine"
+ },
+ {
+  "name": "SC Rheindorf Altach",
+  "country": "Austria"
+ },
+ {
+  "name": "Seattle Sounders",
+  "country": "USA"
+ },
+ {
+  "name": "Sekhukhune United",
+  "country": "South Africa"
+ },
+ {
+  "name": "Semen Padang",
+  "country": "Indonesia"
+ },
+ {
+  "name": "Sepahan",
+  "country": "Iran"
+ },
+ {
+  "name": "Servette FC",
+  "country": "Switzerland"
+ },
+ {
+  "name": "Sevilla FC",
+  "country": "Spain"
+ },
+ {
+  "name": "Shabab Al Ahli",
+  "country": "UAE"
+ },
+ {
+  "name": "Shabana",
+  "country": "Kenya"
+ },
+ {
+  "name": "Shakhtar Donetsk",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Shamrock Rovers",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Shams Azar",
+  "country": "Iran"
+ },
+ {
+  "name": "Shandong Taishan",
+  "country": "China"
+ },
+ {
+  "name": "Shanghai Port",
+  "country": "China"
+ },
+ {
+  "name": "Shanghai Shenhua",
+  "country": "China"
+ },
+ {
+  "name": "Sharjah",
+  "country": "UAE"
+ },
+ {
+  "name": "Shelbourne",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Shenzhen Peng City",
+  "country": "China"
+ },
+ {
+  "name": "Shimizu S-Pulse",
+  "country": "Japan"
+ },
+ {
+  "name": "Shonan Bellmare",
+  "country": "Japan"
+ },
+ {
+  "name": "Shooting Stars",
+  "country": "Nigeria"
+ },
+ {
+  "name": "Sigma Olomouc",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Silkeborg",
+  "country": "Denmark"
+ },
+ {
+  "name": "Sint-Truidense VV",
+  "country": "Belgium"
+ },
+ {
+  "name": "SJK",
+  "country": "Finland"
+ },
+ {
+  "name": "SK Rapid Wien",
+  "country": "Austria"
+ },
+ {
+  "name": "SK Sturm Graz",
+  "country": "Austria"
+ },
+ {
+  "name": "SL Benfica",
+  "country": "Portugal"
+ },
+ {
+  "name": "Slaven Belupo",
+  "country": "Croatia"
+ },
+ {
+  "name": "Slavia Prague",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Sligo Rovers",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Slovácko",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Slovan Liberec",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Smouha",
+  "country": "Egypt"
+ },
+ {
+  "name": "Sochi",
+  "country": "Russia"
+ },
+ {
+  "name": "Sofapaka",
+  "country": "Kenya"
+ },
+ {
+  "name": "Sønderjyske",
+  "country": "Denmark"
+ },
+ {
+  "name": "Sparta Prague",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Sparta Rotterdam",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Spartak Moscow",
+  "country": "Russia"
+ },
+ {
+  "name": "Spartak Subotica",
+  "country": "Serbia"
+ },
+ {
+  "name": "Sport Boys",
+  "country": "Peru"
+ },
+ {
+  "name": "Sport Huancayo",
+  "country": "Peru"
+ },
+ {
+  "name": "Sport Recife",
+  "country": "Brazil"
+ },
+ {
+  "name": "Sporting Charleroi",
+  "country": "Belgium"
+ },
+ {
+  "name": "Sporting CP",
+  "country": "Portugal"
+ },
+ {
+  "name": "Sporting Cristal",
+  "country": "Peru"
+ },
+ {
+  "name": "Sporting Kansas City",
+  "country": "USA"
+ },
+ {
+  "name": "Sporting San José",
+  "country": "Costa Rica"
+ },
+ {
+  "name": "Sporting San Miguelito",
+  "country": "Panama"
+ },
+ {
+  "name": "Sportivo Ameliano",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Sportivo Luqueño",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Sportivo Trinidense",
+  "country": "Paraguay"
+ },
+ {
+  "name": "St Mirren",
+  "country": "Scotland"
+ },
+ {
+  "name": "St Patrick's Athletic",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "St. Louis City",
+  "country": "USA"
+ },
+ {
+  "name": "Stade Brestois 29",
+  "country": "France"
+ },
+ {
+  "name": "Stade Renard Melong",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Stade Rennais FC",
+  "country": "France"
+ },
+ {
+  "name": "Stade Tunisien",
+  "country": "Tunisia"
+ },
+ {
+  "name": "Standard de Liège",
+  "country": "Belgium"
+ },
+ {
+  "name": "Start",
+  "country": "Norway"
+ },
+ {
+  "name": "Stellenbosch FC",
+  "country": "South Africa"
+ },
+ {
+  "name": "Sukhothai",
+  "country": "Thailand"
+ },
+ {
+  "name": "Sunderland",
+  "country": "England"
+ },
+ {
+  "name": "Sunshine Stars",
+  "country": "Nigeria"
+ },
+ {
+  "name": "SuperSport United",
+  "country": "South Africa"
+ },
+ {
+  "name": "SV Ried",
+  "country": "Austria"
+ },
+ {
+  "name": "SV Zulte Waregem",
+  "country": "Belgium"
+ },
+ {
+  "name": "Sydney FC",
+  "country": "Australia"
+ },
+ {
+  "name": "Tacuary",
+  "country": "Paraguay"
+ },
+ {
+  "name": "Tala'ea El Gaish",
+  "country": "Egypt"
+ },
+ {
+  "name": "Talanta",
+  "country": "Kenya"
+ },
+ {
+  "name": "Talleres",
+  "country": "Argentina"
+ },
+ {
+  "name": "Tauro",
+  "country": "Panama"
+ },
+ {
+  "name": "Técnico Universitario",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Telstar",
+  "country": "Netherlands"
+ },
+ {
+  "name": "Teplice",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "The New Saints",
+  "country": "Wales"
+ },
+ {
+  "name": "The Strongest",
+  "country": "Bolivia"
+ },
+ {
+  "name": "Tianjin Jinmen Tiger",
+  "country": "China"
+ },
+ {
+  "name": "Tigre",
+  "country": "Argentina"
+ },
+ {
+  "name": "Tigres UANL",
+  "country": "Mexico"
+ },
+ {
+  "name": "Tijuana",
+  "country": "Mexico"
+ },
+ {
+  "name": "Tivoli Gardens",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Tokyo Verdy",
+  "country": "Japan"
+ },
+ {
+  "name": "Toluca",
+  "country": "Mexico"
+ },
+ {
+  "name": "Tonnerre Yaounde",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Torino",
+  "country": "Italy"
+ },
+ {
+  "name": "Toronto FC",
+  "country": "Canada"
+ },
+ {
+  "name": "Tottenham Hotspur",
+  "country": "England"
+ },
+ {
+  "name": "Toulouse FC",
+  "country": "France"
+ },
+ {
+  "name": "TP Mazembe",
+  "country": "DR Congo"
+ },
+ {
+  "name": "TPS",
+  "country": "Finland"
+ },
+ {
+  "name": "Trabzonspor",
+  "country": "Turkey"
+ },
+ {
+  "name": "Tractor",
+  "country": "Iran"
+ },
+ {
+  "name": "Tromsø",
+  "country": "Norway"
+ },
+ {
+  "name": "TS Galaxy",
+  "country": "South Africa"
+ },
+ {
+  "name": "TSC",
+  "country": "Serbia"
+ },
+ {
+  "name": "TSG Hoffenheim",
+  "country": "Germany"
+ },
+ {
+  "name": "TSV Hartberg",
+  "country": "Austria"
+ },
+ {
+  "name": "Tusker",
+  "country": "Kenya"
+ },
+ {
+  "name": "Udinese",
+  "country": "Italy"
+ },
+ {
+  "name": "Ulinzi Stars",
+  "country": "Kenya"
+ },
+ {
+  "name": "Ulsan HD",
+  "country": "South Korea"
+ },
+ {
+  "name": "Umm Salal",
+  "country": "Qatar"
+ },
+ {
+  "name": "Unión",
+  "country": "Argentina"
+ },
+ {
+  "name": "Union Berlin",
+  "country": "Germany"
+ },
+ {
+  "name": "Union Douala",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Unión Española",
+  "country": "Chile"
+ },
+ {
+  "name": "Unión La Calera",
+  "country": "Chile"
+ },
+ {
+  "name": "Union Saint-Gilloise",
+  "country": "Belgium"
+ },
+ {
+  "name": "Union Touarga",
+  "country": "Morocco"
+ },
+ {
+  "name": "Unirea Slobozia",
+  "country": "Romania"
+ },
+ {
+  "name": "Universidad Católica",
+  "country": "Chile"
+ },
+ {
+  "name": "Universidad Central",
+  "country": "Venezuela"
+ },
+ {
+  "name": "Universidad de Chile",
+  "country": "Chile"
+ },
+ {
+  "name": "Universitario",
+  "country": "Peru"
+ },
+ {
+  "name": "Universitatea Cluj",
+  "country": "Romania"
+ },
+ {
+  "name": "Universitatea Craiova",
+  "country": "Romania"
+ },
+ {
+  "name": "Urawa Red Diamonds",
+  "country": "Japan"
+ },
+ {
+  "name": "US Ben Guerdane",
+  "country": "Tunisia"
+ },
+ {
+  "name": "US Monastir",
+  "country": "Tunisia"
+ },
+ {
+  "name": "US Tshinkunku",
+  "country": "DR Congo"
+ },
+ {
+  "name": "USM Alger",
+  "country": "Algeria"
+ },
+ {
+  "name": "USM Annaba",
+  "country": "Algeria"
+ },
+ {
+  "name": "USM Khenchela",
+  "country": "Algeria"
+ },
+ {
+  "name": "UTA Arad",
+  "country": "Romania"
+ },
+ {
+  "name": "UTC",
+  "country": "Peru"
+ },
+ {
+  "name": "Uthai Thani",
+  "country": "Thailand"
+ },
+ {
+  "name": "Valencia CF",
+  "country": "Spain"
+ },
+ {
+  "name": "Vålerenga",
+  "country": "Norway"
+ },
+ {
+  "name": "Valour FC",
+  "country": "Canada"
+ },
+ {
+  "name": "Vancouver FC",
+  "country": "Canada"
+ },
+ {
+  "name": "Vancouver Whitecaps",
+  "country": "Canada"
+ },
+ {
+  "name": "Varaždin",
+  "country": "Croatia"
+ },
+ {
+  "name": "Vasco da Gama",
+  "country": "Brazil"
+ },
+ {
+  "name": "Västerås SK",
+  "country": "Sweden"
+ },
+ {
+  "name": "Vejle",
+  "country": "Denmark"
+ },
+ {
+  "name": "Vélez Sarsfield",
+  "country": "Argentina"
+ },
+ {
+  "name": "Veraguas United",
+  "country": "Panama"
+ },
+ {
+  "name": "Vere United",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Veres Rivne",
+  "country": "Ukraine"
+ },
+ {
+  "name": "Verona",
+  "country": "Italy"
+ },
+ {
+  "name": "VfB Stuttgart",
+  "country": "Germany"
+ },
+ {
+  "name": "VfL Wolfsburg",
+  "country": "Germany"
+ },
+ {
+  "name": "Viborg",
+  "country": "Denmark"
+ },
+ {
+  "name": "Victoria",
+  "country": "Honduras"
+ },
+ {
+  "name": "Victoria United",
+  "country": "Cameroon"
+ },
+ {
+  "name": "Viking",
+  "country": "Norway"
+ },
+ {
+  "name": "Viktoria Plzeň",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Villarreal CF",
+  "country": "Spain"
+ },
+ {
+  "name": "Vinotinto Ecuador",
+  "country": "Ecuador"
+ },
+ {
+  "name": "Vision FC",
+  "country": "Ghana"
+ },
+ {
+  "name": "Vissel Kobe",
+  "country": "Japan"
+ },
+ {
+  "name": "Vitória",
+  "country": "Brazil"
+ },
+ {
+  "name": "Vitória SC",
+  "country": "Portugal"
+ },
+ {
+  "name": "Vojvodina",
+  "country": "Serbia"
+ },
+ {
+  "name": "Volos",
+  "country": "Greece"
+ },
+ {
+  "name": "VPS",
+  "country": "Finland"
+ },
+ {
+  "name": "Vukovar 1991",
+  "country": "Croatia"
+ },
+ {
+  "name": "Wanderers",
+  "country": "Uruguay"
+ },
+ {
+  "name": "Waterford",
+  "country": "Republic of Ireland"
+ },
+ {
+  "name": "Waterhouse",
+  "country": "Jamaica"
+ },
+ {
+  "name": "Wellington Phoenix",
+  "country": "New Zealand"
+ },
+ {
+  "name": "Werder Bremen",
+  "country": "Germany"
+ },
+ {
+  "name": "West Ham United",
+  "country": "England"
+ },
+ {
+  "name": "Western Sydney Wanderers",
+  "country": "Australia"
+ },
+ {
+  "name": "Widzew Łódź",
+  "country": "Poland"
+ },
+ {
+  "name": "Wisła Płock",
+  "country": "Poland"
+ },
+ {
+  "name": "Wolfsberger AC",
+  "country": "Austria"
+ },
+ {
+  "name": "Wolverhampton Wanderers",
+  "country": "England"
+ },
+ {
+  "name": "WSG Tirol",
+  "country": "Austria"
+ },
+ {
+  "name": "Wuhan Three Towns",
+  "country": "China"
+ },
+ {
+  "name": "Wydad Casablanca",
+  "country": "Morocco"
+ },
+ {
+  "name": "Xelajú",
+  "country": "Guatemala"
+ },
+ {
+  "name": "Yokohama F. Marinos",
+  "country": "Japan"
+ },
+ {
+  "name": "Yokohama FC",
+  "country": "Japan"
+ },
+ {
+  "name": "York United",
+  "country": "Canada"
+ },
+ {
+  "name": "Young Apostles",
+  "country": "Ghana"
+ },
+ {
+  "name": "Yunnan Yukun",
+  "country": "China"
+ },
+ {
+  "name": "Zagłębie Lubin",
+  "country": "Poland"
+ },
+ {
+  "name": "Zamalek",
+  "country": "Egypt"
+ },
+ {
+  "name": "Zamora",
+  "country": "Venezuela"
+ },
+ {
+  "name": "ZED FC",
+  "country": "Egypt"
+ },
+ {
+  "name": "Železničar",
+  "country": "Serbia"
+ },
+ {
+  "name": "Zenit Saint Petersburg",
+  "country": "Russia"
+ },
+ {
+  "name": "Zhejiang",
+  "country": "China"
+ },
+ {
+  "name": "Zlín",
+  "country": "Czech Republic"
+ },
+ {
+  "name": "Zob Ahan",
+  "country": "Iran"
+ },
+ {
+  "name": "Zorya Luhansk",
+  "country": "Ukraine"
+ }
+]
