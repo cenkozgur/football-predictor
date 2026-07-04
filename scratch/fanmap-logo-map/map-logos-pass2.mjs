@@ -53,6 +53,10 @@ function lev(a, b) {
 function bestMatch(ourName, candidates) {
   const s = strip(ourName), toks = new Set(s.split(" ").filter(Boolean));
   if (!s) return null;
+  // Never match a women's/reserve squad unless our name carries the suffix too.
+  if (!RESERVE_SUFFIX.test(ourName.trim())) {
+    candidates = candidates.filter(c => !RESERVE_SUFFIX.test(c.name.trim()));
+  }
   let best = null, bestScore = 0;
   for (const c of candidates) {
     const cs = strip(c.name);
@@ -80,10 +84,27 @@ const countryOf = Object.fromEntries(teams.map(t => [t.name, t.country]));
 const report1 = JSON.parse(fs.readFileSync("pass1/report.json", "utf8"));
 const map1 = JSON.parse(fs.readFileSync("pass1/logo-map.json", "utf8"));
 
+// Audit findings: evict pass-1 matches that hit women's/reserve squads
+// (apiName suffix ours lacks) or a different club outright, and re-match them.
+const RESERVE_SUFFIX = /\s(W|Res\.?|II|B)$/;
+const BLACKLIST = new Set([
+  "Independiente Rivadavia@Argentina", "Vinotinto Ecuador@Ecuador",
+  "Grasshopper Club Zurich@Switzerland", "Zhejiang@China",
+  "Madura United@Indonesia", "General Caballero JLM@Paraguay",
+]);
+for (const [key, v] of Object.entries(map1)) {
+  const ours = key.slice(0, key.lastIndexOf("@"));
+  if (BLACKLIST.has(key) || (RESERVE_SUFFIX.test(v.apiName) && !RESERVE_SUFFIX.test(ours.trim()))) {
+    delete map1[key];
+    report1.unmatched.push(key);
+  }
+}
+
 const unmatched = report1.unmatched.map(k => {
   const i = k.lastIndexOf("@");
   return { name: k.slice(0, i), country: k.slice(i + 1) };
 });
+console.log(`re-matching ${unmatched.length} clubs (incl. evicted bad matches)`);
 
 // Country name resolution (same aliases as pass 1).
 const apiCountries = (await api("/countries")).response.map(c => c.name);
