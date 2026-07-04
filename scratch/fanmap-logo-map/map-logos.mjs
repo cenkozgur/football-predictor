@@ -9,13 +9,17 @@ const OUT_DIR = process.env.OUT_DIR || ".";
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// Key is on the 10 req/min tier: pace requests and retry on rate-limit
+// errors, which arrive as HTTP 200 with body.errors.rateLimit set.
 async function api(path) {
-  for (let attempt = 1; attempt <= 4; attempt++) {
+  for (let attempt = 1; attempt <= 6; attempt++) {
     const res = await fetch(BASE + path, { headers: { "x-apisports-key": KEY } });
-    if (res.status === 429) { await sleep(15000 * attempt); continue; }
+    if (res.status === 429) { await sleep(20000 * attempt); continue; }
     if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
     const body = await res.json();
-    if (body.errors && Object.keys(body.errors).length) throw new Error(`${path} -> ${JSON.stringify(body.errors)}`);
+    const errs = body.errors && Object.keys(body.errors).length ? body.errors : null;
+    if (errs?.rateLimit || errs?.requests) { await sleep(20000 * attempt); continue; }
+    if (errs) throw new Error(`${path} -> ${JSON.stringify(errs)}`);
     return body;
   }
   throw new Error(`${path} -> rate limited after retries`);
@@ -74,7 +78,7 @@ for (const country of Object.keys(byCountry).sort()) {
   // Fetch every team the API knows in this country (single response, no paging).
   const body = await api(`/teams?country=${encodeURIComponent(apiCountry)}`);
   const apiTeams = body.response.map(r => ({ id: r.team.id, name: r.team.name, logo: r.team.logo }));
-  await sleep(400);
+  await sleep(6500);
 
   const idx = new Map();  // norm name -> team (first wins)
   const idxStrip = new Map();
