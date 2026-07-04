@@ -15,13 +15,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Map clubs to api-football logos
+      - name: Download pass-1 artifact
+        run: |
+          mkdir -p pass1
+          gh run download 28716101732 -n fanmap-logo-map -D pass1
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Map remaining clubs (pass 2)
         env:
           API_FOOTBALL_KEY: ${{ secrets.FOOTBALL_API_KEY }}
         run: |
           mkdir -p out
-          OUT_DIR=out node scratch/fanmap-logo-map/map-logos.mjs
+          OUT_DIR=out node scratch/fanmap-logo-map/map-logos-pass2.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: fanmap-logo-map
+          name: fanmap-logo-map-final
           path: out/
