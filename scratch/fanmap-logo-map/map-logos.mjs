@@ -71,16 +71,10 @@ for (const country of Object.keys(byCountry).sort()) {
   const apiCountry = resolveCountry(country);
   if (!apiCountry) { countryMisses.push(country); unmatched.push(...byCountry[country].map(n => `${n}@${country}`)); continue; }
 
-  // Fetch every team the API knows in this country (paginated).
-  const apiTeams = [];
-  let page = 1, totalPages = 1;
-  do {
-    const body = await api(`/teams?country=${encodeURIComponent(apiCountry)}&page=${page}`);
-    apiTeams.push(...body.response.map(r => ({ id: r.team.id, name: r.team.name, logo: r.team.logo })));
-    totalPages = body.paging?.total || 1;
-    page++;
-    await sleep(400);
-  } while (page <= totalPages);
+  // Fetch every team the API knows in this country (single response, no paging).
+  const body = await api(`/teams?country=${encodeURIComponent(apiCountry)}`);
+  const apiTeams = body.response.map(r => ({ id: r.team.id, name: r.team.name, logo: r.team.logo }));
+  await sleep(400);
 
   const idx = new Map();  // norm name -> team (first wins)
   const idxStrip = new Map();
