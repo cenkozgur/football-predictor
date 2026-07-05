@@ -5,6 +5,11 @@ name: FanMap Logo Map
 
 on:
   workflow_dispatch:
+  schedule:
+    # One-shot morning run to finish pass 3: fires before daily-ingest
+    # (08:06 UTC) consumes the shared API quota. DELETE this trigger
+    # together with the rest of the file once the mapping is committed.
+    - cron: "30 5 * * *"
 
 jobs:
   map:
@@ -28,6 +33,7 @@ jobs:
           mkdir -p out
           OUT_DIR=out node scratch/fanmap-logo-map/map-logos-pass2.mjs
       - uses: actions/upload-artifact@v4
+        if: always()   # partial Round-A output is still valuable on timeout
         with:
           name: fanmap-logo-map-final
           path: out/

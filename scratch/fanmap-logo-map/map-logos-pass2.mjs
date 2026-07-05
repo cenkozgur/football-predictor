@@ -50,17 +50,31 @@ function lev(a, b) {
   return dp[a.length][b.length];
 }
 
-function bestMatch(ourName, candidates) {
+// The API country lists contain duplicate records for the same club under
+// the same (or strip-identical) name. Without dedupe those duplicates score
+// identically and trip the tie guard, silently killing every contains-80
+// match (2026-07-05 run: England 0/5 recovered, "SL Benfica" unmatched with
+// the right candidate present). Collapse strip-identical names first.
+function dedupeByStrip(teams) {
+  const seen = new Map();
+  for (const t of teams) {
+    const k = strip(t.name);
+    if (!k) continue;
+    if (!seen.has(k)) seen.set(k, t);
+  }
+  return [...seen.values()];
+}
+
+function scoreCandidates(ourName, candidates) {
   const s = strip(ourName), toks = new Set(s.split(" ").filter(Boolean));
-  if (!s) return null;
+  if (!s) return [];
   // Never match a women's/reserve squad unless our name carries the suffix too.
   if (!RESERVE_SUFFIX.test(ourName.trim())) {
     candidates = candidates.filter(c => !RESERVE_SUFFIX.test(c.name.trim()));
   }
-  let best = null, bestScore = 0;
-  for (const c of candidates) {
+  const scored = [];
+  for (const c of dedupeByStrip(candidates)) {
     const cs = strip(c.name);
-    if (!cs) continue;
     let score = 0;
     if (cs === s) score = 100;
     else if (lev(cs, s) <= 2 && s.length >= 5) score = 90;
@@ -72,11 +86,23 @@ function bestMatch(ourName, candidates) {
       if (smaller > 0 && inter.length === smaller) score = 60 + inter.length * 5;   // full subset
       else if (inter.length && inter.some(t => t.length >= 6)) score = 40 + inter.length * 5; // distinctive shared token
     }
-    if (score > bestScore) { best = c; bestScore = score; }
-    else if (score === bestScore && score > 0 && best && c.id !== best.id) best = { ...best, tie: true };
+    if (score > 0) scored.push({ ...c, score });
   }
-  if (!best || bestScore < 40 || best.tie) return null;
-  return { ...best, score: bestScore };
+  return scored.sort((a, b) => b.score - a.score);
+}
+
+function bestMatch(ourName, candidates) {
+  const scored = scoreCandidates(ourName, candidates);
+  const best = scored[0];
+  if (!best || best.score < 40) return null;
+  if (scored[1] && scored[1].score === best.score) return null; // genuine tie
+  return best;
+}
+
+function explainMiss(ourName, candidates) {
+  const top = scoreCandidates(ourName, candidates).slice(0, 3)
+    .map(c => `${c.name}#${c.id}=${c.score}`).join(", ");
+  return top || "no scoring candidates";
 }
 
 const teams = JSON.parse(fs.readFileSync(new URL("./teams.json", import.meta.url), "utf8"));
@@ -100,11 +126,19 @@ for (const [key, v] of Object.entries(map1)) {
   }
 }
 
-const unmatched = report1.unmatched.map(k => {
+// Resolved by hand in fan-map (scripts/data/manual-logo-overrides.json,
+// each crest visually verified 2026-07-05) — no need to spend requests here.
+const MANUAL_RESOLVED = new Set(["AEL@Greece","AGF@Denmark","AIK@Sweden","Akhmat Grozny@Russia","Al Ahli@Saudi Arabia","Al Hilal@Saudi Arabia","Al Khaleej@Saudi Arabia","Al Taawoun@Saudi Arabia","Angers SCO@France","Argentinos Juniors@Argentina","AS FAR@Morocco","Atlético Mineiro@Brazil","Audax Italiano@Chile","Austria Wien@Austria","Ayutthaya United@Thailand","Bayern Munich@Germany","Belgrano@Argentina","Bodø/Glimt@Norway","Brøndby@Denmark","CAI@Panama","Cardiff Metropolitan University@Wales","Colón@Argentina","Connah's Quay Nomads@Wales","Cracovia@Poland","D.C. United@USA","Daejeon Hana Citizen@South Korea","Esperance de Tunis@Tunisia","Estoril Praia@Portugal","Etoile du Sahel@Tunisia","FC Basel@Switzerland","FC Lausanne-Sport@Switzerland","Fortaleza@Brazil","Gençlerbirliği@Turkey","Gimnasia La Plata@Argentina","Grasshopper Club Zurich@Switzerland","Guadalajara@Mexico","Hammarby IF@Sweden","Heracles Almelo@Netherlands","HJK@Finland","Independiente Rivadavia@Argentina","Instituto@Argentina","Jeju SK@South Korea","Jeonbuk Hyundai Motors@South Korea","Karpaty Lviv@Ukraine","LA Galaxy@USA","LASK@Austria","Leeds United@England","Legia Warsaw@Poland","Lillestrøm@Norway","Llanelli Town@Wales","Lokomotiva@Croatia","Montevideo City Torque@Uruguay","Newcastle United@England","Newell's Old Boys@Argentina","Nordsjælland@Denmark","OB@Denmark","Obolon Kyiv@Ukraine","OGC Nice@France","Oleksandriya@Ukraine","Olympiacos@Greece","Olympique de Marseille@France","Olympique Lyonnais@France","Pumas UNAM@Mexico","RC Lens@France","RCD Mallorca@Spain","Real Oviedo@Spain","Red Bull Bragantino@Brazil","Red Star Belgrade@Serbia","Royal Antwerp FC@Belgium","RS Berkane@Morocco","San Martín San Juan@Argentina","Sarmiento@Argentina","SC Rheindorf Altach@Austria","Shabab Al Ahli@UAE","Shanghai Port@China","Sint-Truidense VV@Belgium","SK Rapid Wien@Austria","SL Benfica@Portugal","Slavia Prague@Czech Republic","Sønderjyske@Denmark","Sparta Prague@Czech Republic","Sporting Charleroi@Belgium","Stade Rennais FC@France","Tala'ea El Gaish@Egypt","Talleres@Argentina","Tianjin Jinmen Tiger@China","Tottenham Hotspur@England","Tromsø@Norway","TSC@Serbia","TSG Hoffenheim@Germany","Unión@Argentina","Union Saint-Gilloise@Belgium","Verona@Italy","Viktoria Plzeň@Czech Republic","Vitória SC@Portugal","West Ham United@England","Wisła Płock@Poland","Wolverhampton Wanderers@England","Zagłębie Lubin@Poland","Zenit Saint Petersburg@Russia","Zhejiang@China"]);
+
+// Searches that returned 0 results on 2026-07-05 — skip in Round B, they
+// will 0-result again and only burn the daily request quota.
+const HOPELESS_SEARCH = new Set(["Maccabi Bnei Reineh@Israel","MC Oujda@Morocco","Olympic Safi@Morocco","Union Touarga@Morocco","Rangers International@Nigeria","Bruk-Bet Termalica@Poland","Astres Douala@Cameroon","Gazelle FA@Cameroon","FC Les Aigles du Congo@DR Congo"]);
+
+const unmatched = report1.unmatched.filter(k => !MANUAL_RESOLVED.has(k)).map(k => {
   const i = k.lastIndexOf("@");
   return { name: k.slice(0, i), country: k.slice(i + 1) };
 });
-console.log(`re-matching ${unmatched.length} clubs (incl. evicted bad matches)`);
+console.log(`re-matching ${unmatched.length} clubs (${MANUAL_RESOLVED.size} skipped as manually resolved)`);
 
 // Country name resolution (same aliases as pass 1).
 const apiCountries = (await api("/countries")).response.map(c => c.name);
@@ -134,14 +168,25 @@ for (const country of Object.keys(byCountry).sort()) {
   for (const ours of byCountry[country]) {
     const hit = bestMatch(ours, apiTeams);
     if (hit) map2[`${ours}@${country}`] = { id: hit.id, logo: hit.logo, apiName: hit.name, method: `pass2-country-${hit.score}` };
-    else stillUnmatched.push({ name: ours, country });
+    else {
+      stillUnmatched.push({ name: ours, country });
+      console.log(`  miss ${ours}@${country}: ${explainMiss(ours, apiTeams)}`);
+    }
   }
   console.log(`${country}: ${byCountry[country].length} retried, ${byCountry[country].length - stillUnmatched.filter(x => x.country === country).length} recovered`);
 }
 
+// Safety net: persist Round-A progress so a timeout/cancel still uploads data.
+fs.writeFileSync(`${OUT_DIR}/logo-map.json`, JSON.stringify({ ...map1, ...map2 }, null, 1));
+fs.writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify({
+  total: teams.length, matched: Object.keys(map1).length + Object.keys(map2).length,
+  partial: "after round A", unmatched: stillUnmatched.map(x => `${x.name}@${x.country}`),
+}, null, 1));
+
 // Round B: per-club search for the rest.
 const finalUnmatched = [];
 for (const { name, country } of stillUnmatched) {
+  if (HOPELESS_SEARCH.has(`${name}@${country}`)) { finalUnmatched.push(`${name}@${country}`); continue; }
   const term = strip(name).slice(0, 30).trim() || norm(name);
   if (term.length < 3) { finalUnmatched.push(`${name}@${country}`); continue; }
   let cands = [];
@@ -153,7 +198,10 @@ for (const { name, country } of stillUnmatched) {
   const inCountry = cands.filter(c => !apiCountry || c.country === apiCountry);
   const hit = bestMatch(name, inCountry.length ? inCountry : []);
   if (hit) map2[`${name}@${country}`] = { id: hit.id, logo: hit.logo, apiName: hit.name, method: `pass2-search-${hit.score}` };
-  else { finalUnmatched.push(`${name}@${country}`); console.log(`STILL UNMATCHED: ${name}@${country} (term "${term}", ${cands.length} results)`); }
+  else {
+    finalUnmatched.push(`${name}@${country}`);
+    console.log(`STILL UNMATCHED: ${name}@${country} (term "${term}", ${cands.length} results, in-country ${inCountry.length}: ${explainMiss(name, inCountry)})`);
+  }
 }
 
 const merged = { ...map1, ...map2 };
